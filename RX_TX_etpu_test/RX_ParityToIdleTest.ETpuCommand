@@ -1,0 +1,41 @@
+#include "..\common_test\CommonInit.ETpuCommand"
+
+// Must be specified on the command line
+//vector("RcvParityToIdle.Vector");
+remove_gate(RX_A);
+remove_gate(RX_B);
+
+//------------------------------------------------------------------------------
+// @@L1 Basic Word Receiver Tests
+//------------------------------------------------------------------------------
+//--------------------------------------------------------
+// @@L2 Test: Test Transition from Parity Bit to Idle
+// @@I 0x10000300
+
+wait_time(24*4 + 10);
+VERIFY_NO_ERRORS
+
+// TEST DataBit15.0 --> PARITY.0 --> CmdSynch
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x01C0);
+
+// TEST DataBit15.0 --> PARITY.1 --> CmdSynch
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x03C0);
+
+// TEST DataBit15.1 --> PARITY.0 --> CmdSynch
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x03C1);
+
+// TEST DataBit15.1 --> PARITY.1 --> CmdSynch
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, 0x07C1);
+
+
+save_cumulative_file_coverage("etec_MS1553_RX.c", "RX_TX_etpu_test\\RX_ParityToIdleTest.CoverageData");
+
+
+//--------------------------------------------------------
+//  That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+wait_time(300);
+exit();
+#else
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_

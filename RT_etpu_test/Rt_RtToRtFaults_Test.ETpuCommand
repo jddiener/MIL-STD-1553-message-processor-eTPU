@@ -1,0 +1,1133 @@
+// Remote Terminal test
+//
+// Test processing of faulty RT->RT messages
+
+#define CONFIG_RT
+#include "..\common_test\CommonInit.ETpuCommand"
+
+// Must be specified on the command line
+//vector("NoWaveform.Vector");
+
+//------------------------------------------------------------------------------
+// @@L1 Remote Terminal (RT) RT-RT Fault Tests
+//------------------------------------------------------------------------------
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Missing Bit Error
+// @@I  0x40010300
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+// Master.Command
+// RT=7     (7<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=1    (1<<0)
+// @@d  First command word specifies the Receiver's RT address of '7'.
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x1   PARITY_1
+// Master.Command
+// RT=6     (6<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=1    (1<<0)
+// Terminal4.data  (3X)
+// @@d  Second command word specifies the Transmitter's RT address of '6'.
+CMD_SYNCH    HEX_0x3 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_1
+IDLE
+// Terminal.status
+// RT=6    (6<<11)
+// Err=0   (0<<0)
+CMD_SYNCH     HEX_0x3 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_1
+// Now the data, ...
+DATA_SYNCH    HEX_0x1 HEX_0x1 HEX_0x1 HEX_0x1   PARITY_1
+IDLE
+// Terminal.status
+// RT=7    (7<<11)
+// Err=0   (0<<0)
+// @@d Inject a missing bit into the Receiver RT Status Word.
+CMD_SYNCH    HEX_0x3 HEX_0x8 D1 D0 D1 MISSING_BIT HEX_0x0   PARITY_0
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, MISSING_BIT_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Parity Error
+// @@I  0x40010310
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x2   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x2   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0xC   PARITY_1
+IDLE
+// @@d Inject a parity error into the Receiver RT's Status Word.
+CMD_SYNCH    HEX_0x3 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, PARITY_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Missing Idle A
+// @@I  0x40010320
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x1   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_0
+// @@d Inject an errant Data Word where the first IDLE is expected.
+DATA_SYNCH    HEX_0x4 HEX_0x8 HEX_0x3 HEX_0xC   PARITY_1
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, EXPECTED_IDLE_MISSING_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Missing Idle A
+// @@I  0x40010330
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x1   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_0
+// @@d Inject an errant Status Word where the first IDLE is expected.
+CMD_SYNCH    HEX_0x4 HEX_0x8 HEX_0x3 HEX_0xC   PARITY_1
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, EXPECTED_IDLE_MISSING_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Idle A Timeout
+// @@I  0x40010340
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x1   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_0
+// @@d Extend the IDLE period beyond the maximum allowed
+// @@d for the transmitting RT to respond.
+INVALID_LONG_IDLE
+wait_time(1);
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, RT_STATUS_TIMEOUT_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Unexpected Data Word
+// @@I  0x40010350
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x2   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x2   PARITY_0
+IDLE
+// @@d Injected a Data Word where the RT Transmitter Status Word is expected.
+DATA_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, RT_DATA_WHEN_EXPECTED_STATUS_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Unexpected Status Word
+// @@I  0x40010360
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x2   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x2   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// @@d Injected a Status Word where the RT Transmitter Data Word is expected.
+CMD_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, RT_STATUS_WHEN_EXPECTED_DATA_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Too Few Data Words
+// @@I  0x40010370
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x2   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x2   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+// @@d Expecting two data words but receive only one instead.
+//DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+IDLE
+
+wait_time(1.0);
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, TOO_FEW_DATA_WORDS_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: No Data Words
+// @@I  0x40010380
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x1   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// @@d Expecting 1 data words but receive 0 instead.
+//DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+IDLE
+
+wait_time(1.0);
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, TOO_FEW_DATA_WORDS_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Too Many Data Words
+// @@I  0x40010390
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x2   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x2   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+// @@d The Transmitting RT sends one more data word than is expected.
+DATA_SYNCH    HEX_0x1 HEX_0x5 HEX_0x8 HEX_0xF   PARITY_1
+IDLE
+//CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+//IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, EXPECTED_IDLE_MISSING_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Too Many Data Words at minimum
+// @@I  0x400103A0
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x1   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+// @@d Expecting the minimum (1) number of data words, but receive 2
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+IDLE
+//CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+//IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, EXPECTED_IDLE_MISSING_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT:  Errant Status Word After Data
+// @@I  0x400103B0
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x2   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x2   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+// @@d Where the second idle is expected, there is an errant Status Word instead.
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, EXPECTED_IDLE_MISSING_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Idle B Timeout
+// @@I  0x400103C0
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x2   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x2   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+// @@d Second IDLE continues when the Receiving RT's Status Word is expected.
+INVALID_LONG_IDLE
+
+wait_time(1);
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, RT_STATUS_TIMEOUT_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: RT Data Word instead of Receiver Status Word
+// @@I  0x400103D0
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x2   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x2   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+IDLE
+// @@d Where the Receiver RT Status word is expected, a Data Word is received instead.
+DATA_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, RT_DATA_WHEN_EXPECTED_STATUS_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Receiver RT Extra Status Word
+// @@I  0x400103E0
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x2   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x2   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_0
+// @@d Where final IDLE is expectted, there is a second Status Word instead.
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, EXPECTED_IDLE_MISSING_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Receiver RT Status Extra Data Word
+// @@I  0x400103F0
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x2   PARITY_1
+CMD_SYNCH    HEX_0x1 HEX_0x6 HEX_0x2 HEX_0x2   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_0
+// @@d Where final IDLE is expectted, there is a second Status Word instead.
+DATA_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, EXPECTED_IDLE_MISSING_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//--------------------------------------------------------
+
+save_cumulative_file_coverage("etec_MS1553_RT_RX.c", "RT_etpu_test\\RT_RtToRtFaults_Test_RX.CoverageData");
+save_cumulative_file_coverage("etec_MS1553_RT_TX.c", "RT_etpu_test\\RT_RtToRtFaults_Test_TX.CoverageData");
+
+//--------------------------------------------------------
+//  That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+wait_time(300);
+exit();
+#else
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_

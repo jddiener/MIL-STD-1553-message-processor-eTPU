@@ -1,0 +1,203 @@
+// 1553 TR vector file
+
+// set base wave frequency to 10 MHz
+frequency 10
+
+// 1553 input signals (pin names)
+node RX_A	ch8.in
+node RX_B	ch9.in
+node Thread_A             ThreadsGroupA
+node Thread_B             ThreadsGroupB
+
+group RX_1553 RX_A RX_B
+
+state LL 00
+state LH 01
+state HL 10
+state HH 11
+
+wave RX_1553
+
+
+		//===========================================
+		// TEST DataBit15.0 --> PARITY.0 --> DataSynch
+		//===========================================
+
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  0x01C0  -->  Parity.0
+	(LL 50)1    (HL 15 LH 15)1
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 0
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // 1
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // C
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 0
+	(LH 5 HL 5)1
+
+	// Data.Synch  -->  0xAAAA  -->  Parity.1
+	(LH 15 HL 15)1
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+	(HL 5 LH 5)1
+
+		//===========================================
+		// TEST DataBit15.0 --> PARITY.1 --> DataSynch
+		//===========================================
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  0x03C0  -->  Parity.1
+	(LL 50)1    (HL 15 LH 15)1
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 0
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    // 3
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // C
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 0
+	(HL 5 LH 5)1
+
+	// Data.Synch  -->  0xAAAA  -->  Parity.1
+	(LH 15 HL 15)1
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+	(HL 5 LH 5)1
+
+		//===========================================
+		// TEST DataBit15.1 --> PARITY.0 --> DataSynch
+		//===========================================
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  0x03C1  -->  Parity.0
+	(LL 50)1    (HL 15 LH 15)1
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 0
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    // 3
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // C
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // 1
+	(LH 5 HL 5)1
+
+	// Data.Synch  -->  0xAAAA  -->  Parity.1
+	(LH 15 HL 15)1
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+	(HL 5 LH 5)1
+
+
+		//===========================================
+		// TEST DataBit15.1 --> PARITY.1 --> DataSynch
+		//===========================================
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  0x07C1  -->  Parity.1
+	(LL 50)1    (HL 15 LH 15)1
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 0
+		(LH 5 HL 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    // 7
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // C
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // 1
+	(HL 5 LH 5)1
+
+	// Data.Synch  -->  0xAAAA  -->  Parity.1
+	(LH 15 HL 15)1
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+	(HL 5 LH 5)1
+
+//==============================================================================
+//               START OF 'COMMAND SYNCH' TESTS
+//==============================================================================
+
+	// Make a bigger gap so it is easier to visually recognize
+	(LL 100)1
+
+		//===========================================
+		// TEST DataBit15.0 --> PARITY.0 --> CmdSynch
+		//===========================================
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  0x01C0  -->  Parity.0
+	(LL 50)1    (HL 15 LH 15)1
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 0
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // 1
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // C
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 0
+	(LH 5 HL 5)1
+
+	// Cmd.Synch  -->  0xAAAA  -->  Parity.1
+	(HL 15 LH 15)1
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+	(HL 5 LH 5)1
+
+		//===========================================
+		// TEST DataBit15.0 --> PARITY.1 --> CmdSynch
+		//===========================================
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  0x03C0  -->  Parity.1
+	(LL 50)1    (HL 15 LH 15)1
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 0
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    // 3
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // C
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 0
+	(HL 5 LH 5)1
+
+	// Cmd.Synch  -->  0xAAAA  -->  Parity.1
+	(HL 15 LH 15)1
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+	(HL 5 LH 5)1
+
+		//===========================================
+		// TEST DataBit15.1 --> PARITY.0 --> CmdSynch
+		//===========================================
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  0x03C1  -->  Parity.0
+	(LL 50)1    (HL 15 LH 15)1
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 0
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    // 3
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // C
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // 1
+	(LH 5 HL 5)1
+
+	// Cmd.Synch  -->  0xAAAA  -->  Parity.1
+	(HL 15 LH 15)1
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+	(HL 5 LH 5)1
+
+
+		//===========================================
+		// TEST DataBit15.1 --> PARITY.1 --> CmdSynch
+		//===========================================
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  0x07C1  -->  Parity.1
+	(LL 50)1    (HL 15 LH 15)1
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 0
+		(LH 5 HL 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    // 7
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // C
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // 1
+	(HL 5 LH 5)1
+
+	// Cmd.Synch  -->  0xAAAA  -->  Parity.1
+	(HL 15 LH 15)1
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+	(HL 5 LH 5)1
+
+
+	// Idle
+	LL *
+end

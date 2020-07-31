@@ -1,0 +1,539 @@
+// Common initialization for all 1553 testing
+
+// include host-eTPU common definitions and
+// the auto-defines file
+#include "..\etpu_code\etec_MS1553_common.h"
+#include "..\etpu_code\etpu_ab_set_defines.h"
+
+// load the initialized global data into memory
+#undef __GLOBAL_MEM_INIT32
+#define __GLOBAL_MEM_INIT32(address, value) *((ETPU_DATA_SPACE U32 *) address) = value;
+#include "..\etpu_code\etpu_ab_set_idata.h"
+#undef __GLOBAL_MEM_INIT32
+
+#ifdef CONFIG_BC
+#define BC_CLOCK_MULT 2
+#else
+#define BC_CLOCK_MULT 1
+#endif
+
+//--------------------------------------------------------
+// Global eTPU initialization
+//--------------------------------------------------------
+
+write_entry_table_base_addr(_ENTRY_TABLE_BASE_ADDR_);
+eTPU_B.write_entry_table_base_addr(_ENTRY_TABLE_BASE_ADDR_);
+
+// Set the clock to 132 Mhz (clk_period in femtoseconds)
+set_clk_period(7575758); // 132 MHz
+eTPU_B.set_clk_period(7575758 / BC_CLOCK_MULT); // 132 MHz (or 264 MHz for BC test engine)
+
+// Configure the etpu
+write_tcr1_control(2);        // System clock/2,  NOT gated by TCRCLK
+write_tcr1_prescaler(1);
+write_global_time_base_enable(1);
+eTPU_B.write_tcr1_control(2);        // System clock/2,  NOT gated by TCRCLK
+eTPU_B.write_tcr1_prescaler(1);
+eTPU_B.write_global_time_base_enable(1);
+
+#define TCR1S_PER_BIT (132/2)
+#define TCR1S_PER_QUARTER_BIT (TCR1S_PER_BIT/4)
+#define TCR1S_PER_HALF_BIT (TCR1S_PER_BIT/2)
+#define TCR1S_PER_THREE_QUARTERS_BIT (TCR1S_PER_BIT-TCR1S_PER_QUARTER_BIT)
+#define TCR1S_PER_ONE_AND_ONE_QUARTER_BIT (TCR1S_PER_BIT+TCR1S_PER_QUARTER_BIT)
+#define TCR1S_PER_ONE_AND_ONE_HALF_BIT (TCR1S_PER_BIT + TCR1S_PER_HALF_BIT)
+#define TCR1S_PER_ONE_AND_THREE_QUARTERS_BIT (TCR1S_PER_BIT+TCR1S_PER_THREE_QUARTERS_BIT)
+#define TCR1S_PER_TWO_AND_ONE_HALF_BIT (TCR1S_PER_BIT+TCR1S_PER_BIT+TCR1S_PER_HALF_BIT)
+#define TCR1S_PER_TWO_AND_ONE_QUARTERS_BIT (TCR1S_PER_BIT+TCR1S_PER_BIT+TCR1S_PER_QUARTER_BIT)
+#define TCR1S_PER_TWO_AND_THREE_QUARTERS_BIT (TCR1S_PER_BIT+TCR1S_PER_BIT+TCR1S_PER_THREE_QUARTERS_BIT)
+#define TCR1S_PER_THREE_BIT (TCR1S_PER_BIT+TCR1S_PER_BIT+TCR1S_PER_BIT)
+#define TCR1S_PER_FOUR_BITS (TCR1S_PER_BIT * 4)
+#define TCR1S_PER_FOUR_AND_ONE_HALF_BIT (TCR1S_PER_BIT*4 + TCR1S_PER_HALF_BIT)
+#define TCR1S_PER_TWELVE_BITS (TCR1S_PER_BIT*12)
+#define TCR1S_PER_NINE_BITS (TCR1S_PER_BIT*9)
+#define TCR1S_PER_EIGHTEEN_AND_ONE_QUARTERS_BIT ((TCR1S_PER_BIT*18)+TCR1S_PER_THREE_QUARTERS_BIT)
+
+//--------------------------------------------------------
+// DEFINES
+//--------------------------------------------------------
+
+// eTPU_A
+
+// terminal under test
+#define RX_A         8
+#define RX_B         9
+#define TX_A         10
+#define TX_B         11
+
+// script pin commands for RX stimulation come in via these channels
+#define RX_A_script  20
+#define RX_B_script  21
+
+#define TESTER_CHAN  1
+
+// eTPU B
+
+// monitor terminal to peek at all bus traffic to verify behavior
+#define MT_A         8
+#define MT_B         9
+
+// RT to respond to BC during BC testing
+#define RT_RX_A      10
+#define RT_RX_B      11
+#define RT_TX_A      12
+#define RT_TX_B      13
+
+#if !defined(CONFIG_BC)
+place_or_gate(TX_A + 32, RX_A_script, RX_A);
+place_or_gate(TX_B + 32, RX_B_script, RX_B);
+#endif
+
+#define CHAN_BASE		_CHANNEL_FRAME_1ETPU_BASE_ADDR
+
+#define RX_DATA_BUFFER      (CHAN_BASE + _CPBA_ARRAY_MS1553__rxBuf_)
+#define TESTER_ADDR         (CHAN_BASE + _FRAME_SIZE_MS1553_)
+
+#define TX_DATA_BUFFER      (CHAN_BASE + _CPBA_ARRAY_MS1553__txBuf_)
+
+// subsidiary test terminals addresses
+#define MT_CHAN_BASE    (TESTER_ADDR + _FRAME_SIZE_Tester_)
+#define MT_DATA_BUFFER  (MT_CHAN_BASE + _CPBA_ARRAY_MS1553__rxBuf_)
+
+#define RT_CHAN_BASE    (MT_CHAN_BASE + _FRAME_SIZE_MS1553_)
+#define RT_RX_DATA_BUFFER  (RT_CHAN_BASE + _CPBA_ARRAY_MS1553__rxBuf_)
+#define RT_TX_DATA_BUFFER  (RT_CHAN_BASE + _CPBA_ARRAY_MS1553__txBuf_)
+
+#define INVALID_WORD 0xBAD
+
+//---------------------------------------------------------------------------------
+#define CLEAR_ALL_ERRORS                                              \
+    write_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, 0);      \
+    write_chan_data8 ( RX_A, _CPBA8_MS1553__missingBitError_, 0);   \	
+    write_chan_data8 ( RX_A, _CPBA8_MS1553__parityError_, 0);
+
+//---------------------------------------------------------------------------------
+#define RESET_RECEIVE_BUFFER                                                      \
+    write_chan_data8  ( RX_A, _CPBA8_MS1553__messageType_, 0);                    \
+    write_chan_data24 ( RX_A, _CPBA24_MS1553__cmdWord1_, INVALID_WORD);           \
+    write_chan_data24 ( RX_A, _CPBA24_MS1553__cmdWord2_, INVALID_WORD);           \
+    write_chan_data24 ( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD);         \
+    write_chan_data24 ( RX_A, _CPBA24_MS1553__rxStatusWord2_, INVALID_WORD);         \
+    write_chan_data24 ( RX_A, _CPBA24_MS1553__rxModeWord_, INVALID_WORD);        \
+    write_chan_data24 ( RX_A, _CPBA24_MS1553__rxBufPtr_, RX_DATA_BUFFER);        \
+    *((U24 *) RX_DATA_BUFFER + 0x00) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x04) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x08) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x0C) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x10) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x14) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x18) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x1C) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x20) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x24) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x28) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x2C) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x30) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x34) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x38) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x3C) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x40) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x44) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x48) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x4C) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x50) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x54) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x58) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x5C) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x60) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x64) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x68) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x6C) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x70) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x74) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x78) = INVALID_WORD;         \
+    *((U24 *) RX_DATA_BUFFER + 0x7C) = INVALID_WORD;         \
+    CLEAR_ALL_ERRORS
+
+//---------------------------------------------------------------------------------
+#define CLEAR_ALL_MT_ERRORS                                              \
+    eTPU_B.write_chan_data8 ( MT_A, _CPBA8_MS1553__errorStatus_, 0);      \
+    eTPU_B.write_chan_data8 ( MT_A, _CPBA8_MS1553__missingBitError_, 0);   \
+    eTPU_B.write_chan_data8 ( MT_A, _CPBA8_MS1553__parityError_, 0);
+
+//---------------------------------------------------------------------------------
+#define RESET_MT_RECEIVE_BUFFER                                                      \
+    eTPU_B.write_chan_data8  ( MT_A, _CPBA8_MS1553__messageType_, 0);                    \
+    eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__cmdWord1_, INVALID_WORD);           \
+    eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__cmdWord2_, INVALID_WORD);           \
+    eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD);         \
+    eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__rxStatusWord2_, INVALID_WORD);         \
+    eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__rxModeWord_, INVALID_WORD);        \
+    eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__rxBufPtr_, RX_DATA_BUFFER);        \
+    *((U24 *) MT_DATA_BUFFER + 0x00) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x04) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x08) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x0C) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x10) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x14) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x18) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x1C) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x20) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x24) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x28) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x2C) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x30) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x34) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x38) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x3C) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x40) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x44) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x48) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x4C) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x50) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x54) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x58) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x5C) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x60) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x64) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x68) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x6C) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x70) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x74) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x78) = INVALID_WORD;         \
+    *((U24 *) MT_DATA_BUFFER + 0x7C) = INVALID_WORD;         \
+    CLEAR_ALL_MT_ERRORS
+
+//---------------------------------------------------------------------------------
+#define CLEAR_ALL_RT_ERRORS                                              \
+    eTPU_B.write_chan_data8 ( RT_RX_A, _CPBA8_MS1553__errorStatus_, 0);      \
+    eTPU_B.write_chan_data8 ( RT_RX_A, _CPBA8_MS1553__missingBitError_, 0);   \
+    eTPU_B.write_chan_data8 ( RT_RX_A, _CPBA8_MS1553__parityError_, 0);
+
+//---------------------------------------------------------------------------------
+#define RESET_RT_RECEIVE_BUFFER                                                      \
+    eTPU_B.write_chan_data8  ( RT_RX_A, _CPBA8_MS1553__messageType_, 0);                    \
+    eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__cmdWord1_, INVALID_WORD);           \
+    eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__cmdWord2_, INVALID_WORD);           \
+    eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD);         \
+    eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__rxStatusWord2_, INVALID_WORD);         \
+    eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__rxModeWord_, INVALID_WORD);        \
+    eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__rxBufPtr_, RX_DATA_BUFFER);        \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x00) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x04) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x08) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x0C) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x10) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x14) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x18) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x1C) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x20) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x24) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x28) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x2C) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x30) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x34) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x38) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x3C) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x40) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x44) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x48) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x4C) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x50) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x54) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x58) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x5C) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x60) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x64) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x68) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x6C) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x70) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x74) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x78) = INVALID_WORD;         \
+    *((U24 *) RT_RX_DATA_BUFFER + 0x7C) = INVALID_WORD;         \
+    CLEAR_ALL_RT_ERRORS
+
+
+//---------------------------------------------------------------------------------------
+#define VERIFY_NO_ERRORS                                                 \
+	verify_chan_data8( RX_A, _CPBA8_MS1553__missingBitError_, 0);      \
+	verify_chan_data8( RX_A, _CPBA8_MS1553__parityError_, 0);          \
+	verify_microcode_exception(0);                                                   \
+	verify_mem_u32(ETPU_DATA_SPACE, _GLOB_VAR32__Global_error_data_, 0xffffffff, 0);
+
+//---------------------------------------------------------------------------------------
+#define VERIFY_NO_RT_ERRORS                                              \
+    verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, 0);        \
+    verify_chan_data8 ( RX_A, _CPBA8_MS1553__missingBitError_, 0);      \
+    verify_chan_data8 ( RX_A, _CPBA8_MS1553__parityError_, 0);          \
+    verify_microcode_exception(0);                                                   \
+    verify_mem_u32(ETPU_DATA_SPACE, _GLOB_VAR32__Global_error_data_, 0xffffffff, 0);
+
+//---------------------------------------------------------------------------------------
+#define VERIFY_NO_BC_ERRORS                                              \
+    verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, 0);        \
+    verify_chan_data8 ( RX_A, _CPBA8_MS1553__missingBitError_, 0);      \
+    verify_chan_data8 ( RX_A, _CPBA8_MS1553__parityError_, 0);          \
+    verify_microcode_exception(0);                                                   \
+    verify_mem_u32(ETPU_DATA_SPACE, _GLOB_VAR32__Global_error_data_, 0xffffffff, 0);
+
+//---------------------------------------------------------------------------------------
+#define VERIFY_NO_MT_ERRORS                                              \
+    eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__errorStatus_, 0);        \
+    eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__missingBitError_, 0);      \
+    eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__parityError_, 0);          \
+    eTPU_B.verify_microcode_exception(0);                                                   \
+    eTPU_B.verify_mem_u32(ETPU_DATA_SPACE, _GLOB_VAR32__Global_error_data_, 0xffffffff, 0);
+
+//---------------------------------------------------------------------------------------
+#define VERIFY_NO_SUB_RT_ERRORS                                              \
+    eTPU_B.verify_chan_data8 ( RT_RX_A, _CPBA8_MS1553__errorStatus_, 0);        \
+    eTPU_B.verify_chan_data8 ( RT_RX_A, _CPBA8_MS1553__missingBitError_, 0);      \
+    eTPU_B.verify_chan_data8 ( RT_RX_A, _CPBA8_MS1553__parityError_, 0);          \
+    eTPU_B.verify_microcode_exception(0);                                                   \
+    eTPU_B.verify_mem_u32(ETPU_DATA_SPACE, _GLOB_VAR32__Global_error_data_, 0xffffffff, 0);
+
+//--------------------------------------------------------
+// Receive Waveform Defines
+//--------------------------------------------------------
+
+#define HI  write_chan_input_pin(RX_A_script, 1); write_chan_input_pin(RX_B_script, 0);
+#define LO  write_chan_input_pin(RX_A_script, 0); write_chan_input_pin(RX_B_script, 1);
+#define OFF write_chan_input_pin(RX_A_script, 0); write_chan_input_pin(RX_B_script, 0);
+#define IDLE       OFF wait_time(4);
+#define RESPONSE_WORD_1 wait_time(28);
+#define RESPONSE_WORD_X wait_time(20);
+#define INVALID_LONG_IDLE OFF wait_time(16);
+#define BC_WORD_1 wait_time(20.5);
+#define BC_WORD_X wait_time(20);
+// Synchs
+#define CMD_SYNCH   HI wait_time(1.5); LO wait_time(1.5);
+#define DATA_SYNCH  LO wait_time(1.5); HI wait_time(1.5);
+// Data
+#define D1           HI  wait_time(0.5);  LO  wait_time(0.5);
+#define D0           LO  wait_time(0.5);  HI  wait_time(0.5);
+#define MISSING_BIT  OFF wait_time(1.0);
+// Data Nibbles
+#define HEX_0x0  D0 D0 D0 D0
+#define HEX_0x1  D0 D0 D0 D1
+#define HEX_0x2  D0 D0 D1 D0
+#define HEX_0x3  D0 D0 D1 D1
+#define HEX_0x4  D0 D1 D0 D0
+#define HEX_0x5  D0 D1 D0 D1
+#define HEX_0x6  D0 D1 D1 D0
+#define HEX_0x7  D0 D1 D1 D1
+#define HEX_0x8  D1 D0 D0 D0
+#define HEX_0x9  D1 D0 D0 D1
+#define HEX_0xA  D1 D0 D1 D0
+#define HEX_0xB  D1 D0 D1 D1
+#define HEX_0xC  D1 D1 D0 D0
+#define HEX_0xD  D1 D1 D0 D1
+#define HEX_0xE  D1 D1 D1 D0
+#define HEX_0xF  D1 D1 D1 D1
+// Parity
+#define PARITY_0  D0 OFF
+#define PARITY_1  D1 OFF
+
+//--------------------------------------------------------
+// eTPU RX Channel initialization
+//--------------------------------------------------------
+
+// Configure 'Receive Channel P'
+#if defined(CONFIG_RT)
+write_chan_func           ( RX_A, _FUNCTION_NUM_MS1553_MS1553_RT_RX_P_);
+write_chan_entry_condition( RX_A, _ENTRY_TABLE_TYPE_MS1553_MS1553_RT_RX_P_);
+#elif defined(CONFIG_MT)
+write_chan_func           ( RX_A, _FUNCTION_NUM_MS1553_MS1553_MT_RX_P_);
+write_chan_entry_condition( RX_A, _ENTRY_TABLE_TYPE_MS1553_MS1553_MT_RX_P_);
+#elif defined(CONFIG_BC)
+write_chan_func           ( RX_A, _FUNCTION_NUM_MS1553_MS1553_BC_RX_P_);
+write_chan_entry_condition( RX_A, _ENTRY_TABLE_TYPE_MS1553_MS1553_BC_RX_P_);
+#else
+write_chan_func           ( RX_A, _FUNCTION_NUM_MS1553_MS1553_RX_P_);
+write_chan_entry_condition( RX_A, _ENTRY_TABLE_TYPE_MS1553_MS1553_RX_P_);
+#endif
+write_chan_base_addr      ( RX_A, CHAN_BASE);
+write_chan_mode           ( RX_A, 0);
+write_chan_cpr            ( RX_A, 2);
+
+// Configure 'Receive Channel N'
+#if defined(CONFIG_RT)
+write_chan_func           ( RX_B, _FUNCTION_NUM_MS1553_MS1553_RT_RX_N_);
+write_chan_entry_condition( RX_B, _ENTRY_TABLE_TYPE_MS1553_MS1553_RT_RX_N_);
+#elif defined(CONFIG_MT)
+write_chan_func           ( RX_B, _FUNCTION_NUM_MS1553_MS1553_MT_RX_N_);
+write_chan_entry_condition( RX_B, _ENTRY_TABLE_TYPE_MS1553_MS1553_MT_RX_N_);
+#elif defined(CONFIG_BC)
+write_chan_func           ( RX_B, _FUNCTION_NUM_MS1553_MS1553_BC_RX_N_);
+write_chan_entry_condition( RX_B, _ENTRY_TABLE_TYPE_MS1553_MS1553_BC_RX_N_);
+#else
+write_chan_func           ( RX_B, _FUNCTION_NUM_MS1553_MS1553_RX_N_);
+write_chan_entry_condition( RX_B, _ENTRY_TABLE_TYPE_MS1553_MS1553_RX_N_);
+#endif
+write_chan_base_addr      ( RX_B, CHAN_BASE);
+write_chan_mode           ( RX_B, 0);
+write_chan_cpr            ( RX_B, 2);
+
+write_chan_func           (TESTER_CHAN, _FUNCTION_NUM_Tester_);
+write_chan_base_addr      (TESTER_CHAN, TESTER_ADDR);
+write_chan_entry_condition(TESTER_CHAN, _ENTRY_TABLE_TYPE_Tester_);
+write_chan_cpr  ( TESTER_CHAN, 3);
+
+write_chan_data24 (TESTER_CHAN, _CPBA24_Tester_linkToChanNum_, 0);
+write_chan_data24 (TESTER_CHAN, _CPBA24_Tester_LatencyStart_, 0);
+write_chan_data24 (TESTER_CHAN, _CPBA24_Tester_LatencyDuration_, 0);
+
+
+// Initialize the channel frame
+
+write_chan_data24 ( RX_A, _CPBA24_MS1553__0P50_bits_, TCR1S_PER_HALF_BIT);
+write_chan_data24 ( RX_A, _CPBA24_MS1553__1P25_bits_, TCR1S_PER_ONE_AND_ONE_QUARTER_BIT);
+write_chan_data24 ( RX_A, _CPBA24_MS1553__1P75_bits_, TCR1S_PER_ONE_AND_THREE_QUARTERS_BIT);
+write_chan_data24 ( RX_A, _CPBA24_MS1553__2P25_bits_, TCR1S_PER_TWO_AND_ONE_QUARTERS_BIT);
+write_chan_data24 ( RX_A, _CPBA24_MS1553__2P50_bits_, TCR1S_PER_TWO_AND_ONE_HALF_BIT);
+write_chan_data24 ( RX_A, _CPBA24_MS1553__18P75_bits_, TCR1S_PER_EIGHTEEN_AND_ONE_QUARTERS_BIT);
+write_chan_data24 ( RX_A, _CPBA24_MS1553__initIdleTimeout_, TCR1S_PER_FOUR_AND_ONE_HALF_BIT);
+write_chan_data24 ( RX_A, _CPBA24_MS1553__rtStatusTimeout_, TCR1S_PER_NINE_BITS);
+write_chan_data8  ( RX_A, _CPBA8_MS1553__parityError_, 0);
+#ifdef CONFIG_RT
+write_chan_data24 ( RX_A, _CPBA24_MS1553__terminalAddress_, (4 << 11));
+#else
+write_chan_data24 ( RX_A, _CPBA24_MS1553__terminalAddress_, (0x1F << 11)); // broadcast (MT)
+#endif
+
+// RT-specific config
+write_chan_data8  ( RX_A, _CPBA8_MS1553__rxBaseChan_, RX_A);
+write_chan_data8  ( RX_A, _CPBA8_MS1553__txBaseChan_, TX_A);
+
+
+RESET_RECEIVE_BUFFER
+
+
+//--------------------------------------------------------
+// eTPU TX Channel initialization
+//--------------------------------------------------------
+
+#if defined(CONFIG_RT)
+write_chan_func           ( TX_A, _FUNCTION_NUM_MS1553_MS1553_RT_TX_);
+write_chan_entry_condition( TX_A, _ENTRY_TABLE_TYPE_MS1553_MS1553_RT_TX_);
+#elif defined(CONFIG_BC)
+write_chan_func           ( TX_A, _FUNCTION_NUM_MS1553_MS1553_BC_TX_);
+write_chan_entry_condition( TX_A, _ENTRY_TABLE_TYPE_MS1553_MS1553_BC_TX_);
+#else
+write_chan_func           ( TX_A, _FUNCTION_NUM_MS1553_MS1553_TX_);
+write_chan_entry_condition( TX_A, _ENTRY_TABLE_TYPE_MS1553_MS1553_TX_);
+#endif
+write_chan_base_addr      ( TX_A, CHAN_BASE);
+write_chan_mode           ( TX_A, 0);
+write_chan_cpr            ( TX_A, 2);
+
+write_chan_base_addr      ( TX_B, CHAN_BASE);
+
+write_chan_func           (TESTER_CHAN, _FUNCTION_NUM_Tester_);
+write_chan_base_addr      (TESTER_CHAN, TESTER_ADDR);
+write_chan_entry_condition(TESTER_CHAN, _ENTRY_TABLE_TYPE_Tester_);
+write_chan_cpr  ( TESTER_CHAN, 3);
+
+write_chan_data24 (TESTER_CHAN, _CPBA24_Tester_linkToChanNum_, 0);
+write_chan_data24 (TESTER_CHAN, _CPBA24_Tester_LatencyStart_, 0);
+write_chan_data24 (TESTER_CHAN, _CPBA24_Tester_LatencyDuration_, 0);
+
+// Initialize the channel frame
+
+write_chan_data24 ( TX_A, _CPBA24_MS1553__0P50_bits_, TCR1S_PER_HALF_BIT);
+write_chan_data24 ( TX_A, _CPBA24_MS1553__1P50_bits_, TCR1S_PER_ONE_AND_ONE_HALF_BIT);
+write_chan_data24 ( TX_A, _CPBA24_MS1553__txDelay_, TCR1S_PER_FOUR_BITS);
+write_chan_data24 ( TX_A, _CPBA24_MS1553__txStatusWord_, 0x1BAD); // junk for now
+write_chan_data24 ( TX_A, _CPBA24_MS1553__txModeWord_, 0x2BAD); // junk for now
+
+
+//--------------------------------------------------------
+// INITIALIZE & START RUNNING (main terminal under test)
+
+write_chan_hsrr   ( RX_A, 7);
+write_chan_hsrr   ( TX_A, 7);
+
+
+//--------------------------------------------------------
+// initialize subsidiary terminals that assist testing
+
+#if defined(CONFIG_RT) || defined(CONFIG_BC)
+place_buffer(RX_A, MT_A + 128);
+place_buffer(RX_B, MT_B + 128);
+
+eTPU_B.write_chan_func           ( MT_A, _FUNCTION_NUM_MS1553_MS1553_MT_RX_P_);
+eTPU_B.write_chan_entry_condition( MT_A, _ENTRY_TABLE_TYPE_MS1553_MS1553_MT_RX_P_);
+eTPU_B.write_chan_base_addr      ( MT_A, MT_CHAN_BASE);
+eTPU_B.write_chan_mode           ( MT_A, 0);
+eTPU_B.write_chan_cpr            ( MT_A, 2);
+
+eTPU_B.write_chan_func           ( MT_B, _FUNCTION_NUM_MS1553_MS1553_MT_RX_N_);
+eTPU_B.write_chan_entry_condition( MT_B, _ENTRY_TABLE_TYPE_MS1553_MS1553_MT_RX_N_);
+eTPU_B.write_chan_base_addr      ( MT_B, MT_CHAN_BASE);
+eTPU_B.write_chan_mode           ( MT_B, 0);
+eTPU_B.write_chan_cpr            ( MT_B, 2);
+
+eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__0P50_bits_, TCR1S_PER_HALF_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__1P25_bits_, TCR1S_PER_ONE_AND_ONE_QUARTER_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__1P75_bits_, TCR1S_PER_ONE_AND_THREE_QUARTERS_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__2P25_bits_, TCR1S_PER_TWO_AND_ONE_QUARTERS_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__2P50_bits_, TCR1S_PER_TWO_AND_ONE_HALF_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__18P75_bits_, TCR1S_PER_EIGHTEEN_AND_ONE_QUARTERS_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__initIdleTimeout_, TCR1S_PER_FOUR_AND_ONE_HALF_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__rtStatusTimeout_, TCR1S_PER_NINE_BITS * BC_CLOCK_MULT);
+eTPU_B.write_chan_data8  ( MT_A, _CPBA8_MS1553__parityError_, 0);
+eTPU_B.write_chan_data24 ( MT_A, _CPBA24_MS1553__terminalAddress_, (0x1F << 11)); // broadcast (MT)
+
+eTPU_B.write_chan_hsrr   ( MT_A, 7);
+#endif
+
+#if defined(CONFIG_BC)
+place_or_gate(TX_A + 32, RX_A_script, 30);
+place_or_gate(TX_B + 32, RX_B_script, 31);
+place_or_gate(30, RT_TX_A+128+32, RX_A);
+place_or_gate(31, RT_TX_B+128+32, RX_B);
+place_buffer(RX_A, RT_RX_A + 128);
+place_buffer(RX_B, RT_RX_B + 128);
+
+// RX
+eTPU_B.write_chan_func           ( RT_RX_A, _FUNCTION_NUM_MS1553_MS1553_RT_RX_P_);
+eTPU_B.write_chan_entry_condition( RT_RX_A, _ENTRY_TABLE_TYPE_MS1553_MS1553_RT_RX_P_);
+eTPU_B.write_chan_base_addr      ( RT_RX_A, RT_CHAN_BASE);
+eTPU_B.write_chan_mode           ( RT_RX_A, 0);
+eTPU_B.write_chan_cpr            ( RT_RX_A, 2);
+
+eTPU_B.write_chan_func           ( RT_RX_B, _FUNCTION_NUM_MS1553_MS1553_RT_RX_N_);
+eTPU_B.write_chan_entry_condition( RT_RX_B, _ENTRY_TABLE_TYPE_MS1553_MS1553_RT_RX_N_);
+eTPU_B.write_chan_base_addr      ( RT_RX_B, RT_CHAN_BASE);
+eTPU_B.write_chan_mode           ( RT_RX_B, 0);
+eTPU_B.write_chan_cpr            ( RT_RX_B, 2);
+
+eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__0P50_bits_, TCR1S_PER_HALF_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__1P25_bits_, TCR1S_PER_ONE_AND_ONE_QUARTER_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__1P75_bits_, TCR1S_PER_ONE_AND_THREE_QUARTERS_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__2P25_bits_, TCR1S_PER_TWO_AND_ONE_QUARTERS_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__2P50_bits_, TCR1S_PER_TWO_AND_ONE_HALF_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__18P75_bits_, TCR1S_PER_EIGHTEEN_AND_ONE_QUARTERS_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__initIdleTimeout_, TCR1S_PER_FOUR_AND_ONE_HALF_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__rtStatusTimeout_, TCR1S_PER_NINE_BITS * BC_CLOCK_MULT);
+eTPU_B.write_chan_data8  ( RT_RX_A, _CPBA8_MS1553__parityError_, 0);
+eTPU_B.write_chan_data24 ( RT_RX_A, _CPBA24_MS1553__terminalAddress_, (4 << 11));
+eTPU_B.write_chan_data8  ( RT_RX_A, _CPBA8_MS1553__rxBaseChan_, RT_RX_A);
+eTPU_B.write_chan_data8  ( RT_RX_A, _CPBA8_MS1553__txBaseChan_, RT_TX_A);
+
+// TX
+eTPU_B.write_chan_func           ( RT_TX_A, _FUNCTION_NUM_MS1553_MS1553_RT_TX_);
+eTPU_B.write_chan_entry_condition( RT_TX_A, _ENTRY_TABLE_TYPE_MS1553_MS1553_RT_TX_);
+eTPU_B.write_chan_base_addr      ( RT_TX_A, RT_CHAN_BASE);
+eTPU_B.write_chan_mode           ( RT_TX_A, 0);
+eTPU_B.write_chan_cpr            ( RT_TX_A, 2);
+
+eTPU_B.write_chan_base_addr      ( RT_TX_B, RT_CHAN_BASE);
+
+eTPU_B.write_chan_data24 ( RT_TX_A, _CPBA24_MS1553__1P50_bits_, TCR1S_PER_ONE_AND_ONE_HALF_BIT * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( RT_TX_A, _CPBA24_MS1553__txDelay_, TCR1S_PER_FOUR_BITS * BC_CLOCK_MULT);
+eTPU_B.write_chan_data24 ( RT_TX_A, _CPBA24_MS1553__txStatusWord_, 0x1BAD); // junk for now
+eTPU_B.write_chan_data24 ( RT_TX_A, _CPBA24_MS1553__txModeWord_, 0x2BAD); // junk for now
+
+eTPU_B.write_chan_hsrr   ( RT_RX_A, 7);
+eTPU_B.write_chan_hsrr   ( RT_TX_A, 7);
+#endif

@@ -1,0 +1,604 @@
+// Remote Terminal test
+//
+// Test processing of faulty RT->BC messages
+
+#define CONFIG_RT
+#include "..\common_test\CommonInit.ETpuCommand"
+
+// Must be specified on the command line
+//vector("NoWaveform.Vector");
+
+//------------------------------------------------------------------------------
+// @@L1 Remote Terminal (RT) RT-BC Fault Tests
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Message begins with DATA Fault
+// @@I  0x40010200
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+DATA_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x3   PARITY_1
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, 0);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, MESSAGE_STARTS_WITH_DATA_ERROR);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, INVALID_WORD);
+
+// @@d Verify that following a fault a new & valid message can be received.
+
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (1<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=1    (1<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x6 HEX_0x1   PARITY_1
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2007 );
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x00, 0xbd2e);
+RESPONSE_WORD_1
+RESPONSE_WORD_X
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 1 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, INVALID_WORD);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x2007 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0xbd2e);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Missing Bit Error
+// @@I  0x40010210
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 D1 D0 /* missing */ PARITY_0
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, 0);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, MISSING_BIT_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (1<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=1    (1<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x6 HEX_0x1   PARITY_1
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2007 );
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x00, 0xbd2e);
+RESPONSE_WORD_1
+RESPONSE_WORD_X
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 1 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, INVALID_WORD);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x2007 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0xbd2e);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Parity Error
+// @@I  0x40010220
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+// @@d Inject a parity error into the command word
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x4   PARITY_1
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, 0);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, PARITY_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (1<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=1    (1<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x6 HEX_0x1   PARITY_1
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2007 );
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x00, 0xbd2e);
+RESPONSE_WORD_1
+RESPONSE_WORD_X
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 1 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, INVALID_WORD);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x2007 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0xbd2e);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Missing RT Idle
+// @@I  0x40010230
+// @@d  Commanding a transmission of four words.
+// @@d  But a COMMAND WORD is received instead of the expected idle!
+// @@d  Verify that the fault is logged, extra 'IDLE' is stored.
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xE HEX_0x2 HEX_0x4   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// Terminal.data  (2X)
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x5 HEX_0xA HEX_0xF   PARITY_0
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0xB HEX_0x9 HEX_0x3 HEX_0x9   PARITY_0
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x3   PARITY_1
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, EXPECTED_IDLE_MISSING_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (1<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=1    (1<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x6 HEX_0x1   PARITY_1
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2007 );
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x00, 0xbd2e);
+RESPONSE_WORD_1
+RESPONSE_WORD_X
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 1 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, INVALID_WORD);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x2007 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0xbd2e);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: RT fails to respond
+// @@I  0x40010240
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xE HEX_0x2 HEX_0x3   PARITY_1
+INVALID_LONG_IDLE
+
+wait_time(1);
+
+// @@d Following the Controller's command word, the RT fails to provide a status
+// @@d withing the maximum allowed 14 microseconds.
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, RT_STATUS_TIMEOUT_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (1<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=1    (1<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x6 HEX_0x1   PARITY_1
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2007 );
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x00, 0xbd2e);
+RESPONSE_WORD_1
+RESPONSE_WORD_X
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 1 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, INVALID_WORD);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x2007 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0xbd2e);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: RT Status Missing
+// @@I  0x40010250
+// @@d  RT responds to transmit command with a 'Data' word instead of a status word.
+// @@d  Verify that the fault is logged, extra word is stored.
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xE HEX_0x2 HEX_0x4   PARITY_0
+IDLE
+DATA_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// Terminal4.data  (2X)
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x5 HEX_0xA HEX_0xF   PARITY_0
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0xB HEX_0x9 HEX_0x3 HEX_0x9   PARITY_0
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, RT_DATA_WHEN_EXPECTED_STATUS_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (1<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=1    (1<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x6 HEX_0x1   PARITY_1
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2007 );
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x00, 0xbd2e);
+RESPONSE_WORD_1
+RESPONSE_WORD_X
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 1 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, INVALID_WORD);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x2007 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0xbd2e);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Too few data words.
+// @@I  0x40010260
+// @@d        Commanding four data words, but 'IDLE' received
+// @@d        when the fourth was expected.
+// @@d        Verify that the fault is logged, missing word is skipped.
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xE HEX_0x2 HEX_0x4   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// Terminal4.data  (3X)
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x5 HEX_0xA HEX_0xF   PARITY_0
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, TOO_FEW_DATA_WORDS_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (1<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=1    (1<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x6 HEX_0x1   PARITY_1
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2007 );
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x00, 0xbd2e);
+RESPONSE_WORD_1
+RESPONSE_WORD_X
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 1 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, INVALID_WORD);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x2007 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0xbd2e);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Unexpected Status
+// @@I  0x40010270
+// @@d  When a 'DATA WORD' is expected, there is a 'STATUS WORD' instead.
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xE HEX_0x2 HEX_0x4   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// Terminal4.data  (2X)
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x5 HEX_0xA HEX_0xF   PARITY_0
+CMD_SYNCH     HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0xB HEX_0x9 HEX_0x3 HEX_0x9   PARITY_0
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, RT_STATUS_WHEN_EXPECTED_DATA_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (1<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=1    (1<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x6 HEX_0x1   PARITY_1
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2007 );
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x00, 0xbd2e);
+RESPONSE_WORD_1
+RESPONSE_WORD_X
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 1 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, INVALID_WORD);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x2007 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0xbd2e);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Too many data words
+// @@I  0x40010280
+// @@d        Commanding FOUR words, but receive FIVE!
+// @@d        Verify that the fault is logged, extra word is stored.
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xE HEX_0x2 HEX_0x4   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// Terminal4.data  (2X)
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x5 HEX_0xA HEX_0xF   PARITY_0
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0xB HEX_0x9 HEX_0x3 HEX_0x9   PARITY_0
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, EXPECTED_IDLE_MISSING_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (1<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=1    (1<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x6 HEX_0x1   PARITY_1
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2007 );
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x00, 0xbd2e);
+RESPONSE_WORD_1
+RESPONSE_WORD_X
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 1 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, INVALID_WORD);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x2007 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0xbd2e);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Too many data words at minimum
+// @@I  0x40010290
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+// @@d  Command 1 data word (minimum.)
+CMD_SYNCH    HEX_0x3 HEX_0xE HEX_0x2 HEX_0x1   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// @@d  RT transmitts 2 data words (too many.)
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x5 HEX_0xA HEX_0xF   PARITY_0
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, EXPECTED_IDLE_MISSING_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (1<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=1    (1<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x6 HEX_0x1   PARITY_1
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2007 );
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x00, 0xbd2e);
+RESPONSE_WORD_1
+RESPONSE_WORD_X
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 1 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, INVALID_WORD);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x2007 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0xbd2e);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: RT Trailing Status
+// @@I  0x400102A0
+// @@d  Commanding a valid message.
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x3 HEX_0xE HEX_0x2 HEX_0x4   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// Terminal4.data  (2X)
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x5 HEX_0xA HEX_0xF   PARITY_0
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0xB HEX_0x9 HEX_0x3 HEX_0x9   PARITY_0
+// @@d After the fourth data word an idle is expected
+// @@d but there is an unexpected status word instead.
+CMD_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+IDLE
+
+VERIFY_NO_ERRORS
+// @@d Verify that the fault is reported.
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, EXPECTED_IDLE_MISSING_ERROR);
+
+// @@d Verify that following a fault a new & valid message can be received.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (1<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=1    (1<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x6 HEX_0x1   PARITY_1
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2007 );
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x00, 0xbd2e);
+RESPONSE_WORD_1
+RESPONSE_WORD_X
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 1 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, INVALID_WORD);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2661 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x2007 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0xbd2e);
+
+
+//--------------------------------------------------------
+
+save_cumulative_file_coverage("etec_MS1553_RT_RX.c", "RT_etpu_test\\RT_RtToBcFaults_Test_RX.CoverageData");
+save_cumulative_file_coverage("etec_MS1553_RT_TX.c", "RT_etpu_test\\RT_RtToBcFaults_Test_TX.CoverageData");
+
+//--------------------------------------------------------
+//  That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+wait_time(300);
+exit();
+#else
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_

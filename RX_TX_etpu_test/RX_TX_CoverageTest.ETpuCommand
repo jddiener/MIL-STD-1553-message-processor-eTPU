@@ -1,0 +1,49 @@
+// FILE: RX_TX_CoverageTest.ETpuCommand
+// Copyright (C) 2020 ASH WARE, Inc. All Rights Reserved.
+
+// generic RX/TX code coverage
+
+//=============================================================================
+
+// first, load cumulative coverage from requirements-based tests
+
+load_cumulative_file_coverage("etec_MS1553_RX.c", "RX_TX_etpu_test\\RX_CornerCasesTest.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RX.c", "RX_TX_etpu_test\\RX_DataToDataTest.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RX.c", "RX_TX_etpu_test\\RX_FaultTest.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RX.c", "RX_TX_etpu_test\\RX_IdleToSynchTest.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RX.c", "RX_TX_etpu_test\\RX_ParityToIdleTest.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RX.c", "RX_TX_etpu_test\\RX_ParityToSynchTest.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RX.c", "RX_TX_etpu_test\\RX_SeekSynchTest.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RX.c", "RX_TX_etpu_test\\RX_SynchToDataTest.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_TX.c", "RX_TX_etpu_test\\TX_Test.CoverageData");
+
+//=============================================================================
+
+// perform additional tests to get 100% coverage
+
+// none needed
+
+//=============================================================================
+
+// infer entry coverage (TBD)
+
+// verify coverage
+
+verify_file_coverage_ex("etec_MS1553_RX.c", 100, 100, 0);
+write_coverage_file("RX_TX_etpu_test\\RX.Coverage");
+save_cumulative_file_coverage("etec_MS1553_RX.c", "RX_TX_etpu_test\\RX.TotalCoverageData");
+verify_file_coverage_ex("etec_MS1553_TX.c", 100, 100, 0);
+write_coverage_file("RX_TX_etpu_test\\TX.Coverage");
+save_cumulative_file_coverage("etec_MS1553_TX.c", "RX_TX_etpu_test\\TX.TotalCoverageData");
+
+//=============================================================================
+
+//=============================================================================
+//==========      That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+wait_time(5000);
+exit();
+#else
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_
+

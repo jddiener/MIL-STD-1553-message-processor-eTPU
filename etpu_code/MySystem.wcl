@@ -1,0 +1,16 @@
+// WORST CASE LATENCY TEST FILE!
+
+20  RCR   // RAM collision rate (percent)
+132 mhz   // System clock frequency
+
+// Processor family, valid keyords are:
+//    MCF (Coldfire)
+//    MPC (Freescale Power Architecture)
+//    SPC (STMicro Power Architecture)
+MPC
+
+
+// Engine  Channel  Function        Priority    [max WCL in microseconds (us)]
+    A,       6,    MILSTD1553_TX,     high,       1.0
+    A,       7,    MILSTD1553_TX,     off,       1.0
+                                                

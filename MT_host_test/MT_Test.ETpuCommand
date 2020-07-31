@@ -1,0 +1,464 @@
+// Monitor Terminal host test
+//
+// This simulation script stimulates an MT eTPU driver in order to
+// test the MT host API code.
+
+#define CONFIG_MT
+#include "..\common_test\CommonHostInit.ETpuCommand"
+
+
+wait_time(1000); // wait until eTPU initialization is complete
+
+
+//------------------------------------------------------------------------------
+// @@L1 Monitor Terminal (MT) Functional Tests
+//------------------------------------------------------------------------------
+
+
+//--------------------------------------------------------
+// @@L2 Test: Controller to RT 'Receive' Transfer
+// @@I 0x21000000
+
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d  Test a message from the controller to the Receiver RT
+// @@d  at address '4' with three data words.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// Terminal4.data  (3X)
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+IDLE
+// Terminal4.status
+// RT=4    (4<<11)
+// Err=0   (0<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "1"); IDLE
+
+
+//--------------------------------------------------------
+// @@L2 Test: RT to Controller 'Transmit' Transfer
+// @@I  0x21000010
+
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d Test a message from Transmitter
+// @@d from RT at address '4' to the controller with three data words.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x3   PARITY_1
+IDLE
+// Terminal4.status
+// RT=4    (4<<11)
+// Err=0   (0<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// Terminal4.data  (3X)
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x5 HEX_0xA HEX_0xF   PARITY_0
+DATA_SYNCH    HEX_0x3 HEX_0x9 HEX_0xA HEX_0x5   PARITY_1
+IDLE
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "2"); IDLE
+
+// @@d  Test another message but with 4 Data words.
+
+wait_time(10);
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x4   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// Terminal4.data  (4X)
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x5 HEX_0xA HEX_0xF   PARITY_0
+DATA_SYNCH    HEX_0x3 HEX_0x9 HEX_0xA HEX_0x5   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x5 HEX_0xA HEX_0xF   PARITY_0
+IDLE
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "3"); IDLE
+
+// @@d  Test another message but with 1 Data word
+
+wait_time(10);
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// Terminal4.data  (2X)
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+IDLE
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "4"); IDLE
+
+
+//--------------------------------------------------------
+// @@L2 Test: RT to RT Transfer
+// @@I 0x21000020
+
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d  Test RT-RT message with one data word.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=1    (1<<0)
+// @@d  First command word specifies the Receiver's RT address of '4'.
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x1   PARITY_1
+// Master.Command(Terminal5)
+// RT=6     (6<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=1    (1<<0)
+// Terminal4.data  (3X)
+// @@d  Second command word specifies the Transmitter's RT address of '6'.
+CMD_SYNCH    HEX_0x3 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_1
+IDLE
+// Terminal5.status
+// RT=5    (5<<11)
+// Err=0   (0<<0)
+CMD_SYNCH     HEX_0x3 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_1
+// Now the data, ...
+DATA_SYNCH    HEX_0x1 HEX_0x1 HEX_0x1 HEX_0x1   PARITY_1
+IDLE
+// Terminal4.status
+// RT=4    (4<<11)
+// Err=0   (0<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "5"); IDLE
+
+
+//--------------------------------------------------------
+// @@L2 Test: Bus Controller to ALL RT's broadcast
+// @@I 0x21000030
+
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d Set the RT address to 0x1F to indicate Broadcast (to ALL Rt's.)
+// @@d Set the number of data words to four
+
+IDLE
+// Master.Command(all)
+// RT=0x1F     (0x1F<<11)   (broadcast)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=4    (4<<0)
+CMD_SYNCH    HEX_0xF HEX_0xA HEX_0x2 HEX_0x4   PARITY_1
+// @@d  TransmitSet the RT address to 0x1F to indicate Broadcat (to ALL Rt's.)
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+DATA_SYNCH    HEX_0x9 HEX_0xC HEX_0xA HEX_0xF   PARITY_1
+IDLE
+
+// @@d  Note that in a broadcast message there is no Receiver RT Status response.
+//CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+//IDLE
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "6"); IDLE
+
+
+//--------------------------------------------------------
+// @@L2 TEST: RT to ALL RT Broadcast
+// @@I 0x21000040
+
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d  Test a Broadcast from Transmitter RT address 2 to ALL RT's (address=0x1F.)
+// @@d  Set the number of data words to 1.
+
+IDLE
+// @@d Set the Receiver's RT address to 0x1F indicating a 'Broadcast.'
+// Master.Command(Terminal4)
+// RT=0x1F  (1F<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=1    (1<<0)
+CMD_SYNCH    HEX_0xF HEX_0xA HEX_0x2 HEX_0x1   PARITY_1
+// Master.Command(Terminal5)
+// RT=6     (6<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=1    (1<<0)
+// Terminal4.data  (3X)
+CMD_SYNCH    HEX_0x3 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_1
+IDLE
+// Terminal5.status
+// RT=5    (5<<11)
+// Err=0   (0<<0)
+CMD_SYNCH     HEX_0x3 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_1
+// Now the data, ...
+DATA_SYNCH    HEX_0x1 HEX_0x1 HEX_0x1 HEX_0x1   PARITY_1
+IDLE
+// @@d The message is sealed at the second IDLE (no Receiver RT status word.)
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "7"); IDLE
+
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Transmit Without Data
+// @@I  0x21000050
+
+// @@d  Generate a Mode Command by setting the Mode Code to 0x1F.
+
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4          (4<<11)
+// R/T=1         (1<<10)
+// SUB_ADDR=0x1F (0x1F<<5)  (Mode Code: 11111b)
+// MODE=2         (2<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x7 HEX_0xE HEX_0x2   PARITY_1
+IDLE
+// @@d  Receiver RT of the mode code returns a Status Word but no Data Words
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+wait_time(1);
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "8"); IDLE
+
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Transmit With Data
+// @@I  0x21000060
+
+// @@d  Generate a Mode Command by setting the Mode Code to 0x1F.
+
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4          (4<<11)
+// R/T=1         (1<<10)
+// SUB_ADDR=0x1F (0x1F<<5)  (Mode Code: 11111b)
+// MODE=0x12     (0x12<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x7 HEX_0xF HEX_0x2   PARITY_0
+IDLE
+// @@d  Receiver RT of the mode code returns a Status Word and one Data Word
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+IDLE
+
+wait_time(1);
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "9"); IDLE
+
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Receive With Data
+// @@I  0x21000070
+
+// @@d  Generate a Mode Command by setting the Mode Code to 0x1F.
+
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4          (4<<11)
+// R/T=0         (0<<10)
+// SUB_ADDR=0x1F (0x1F<<5)  (Mode Code: 11111b)
+// MODE=0x12     (0x12<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x3 HEX_0xF HEX_0x2   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+IDLE
+// @@d  Receiver RT of the mode code returns a Status Word and one Data Word
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+wait_time(1);
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "10"); IDLE
+
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Broadcast Without Data
+// @@I  0x21000080
+
+// @@d  Generate a Mode Command by setting the Mode Code to 0x1F.
+
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+// Master.Command(Terminal4)
+// RT=1F          (0x1F<<11)
+// R/T=1         (1<<10)
+// SUB_ADDR=0x1F (0x1F<<5)  (Mode Code: 11111b)
+// MODE=2         (2<<0)
+CMD_SYNCH    HEX_0xF HEX_0xF HEX_0xE HEX_0x2   PARITY_1
+IDLE
+
+wait_time(1);
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "11"); IDLE
+
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Broadcast With Data
+// @@I  0x21000090
+
+// @@d  Generate a Mode Command by setting the Mode Code to 0x1F.
+
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+// Master.Command(Terminal4)
+// RT=1F         (0x1F<<11)
+// R/T=0         (<<10)
+// SUB_ADDR=0x1F (0x1F<<5)  (Mode Code: 11111b)
+// MODE=0x12     (0x12<<0)
+CMD_SYNCH    HEX_0xF HEX_0xB HEX_0xF HEX_0x2   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x2 HEX_0xE HEX_0x0   PARITY_0
+IDLE
+
+wait_time(1);
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "12"); IDLE
+
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Using 'RT ADDRESS == 0x00'
+// @@I  0x210000A0
+
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d  Generate a Mode Command by setting the Mode Code to 0x00.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=0x18       (0x18<<11)
+// R/T=1         (1<<10)
+// SUB_ADDR=0x1F (0x00<<5)  (Mode Code: 00000b)
+// MODE=9        (9<<0)
+CMD_SYNCH    HEX_0xC HEX_0x4 HEX_0x0 HEX_0x9   PARITY_0
+IDLE
+// @@d  Receiver RT of the mode code returns a Status Word but no Data Words
+CMD_SYNCH    HEX_0xC HEX_0x0 HEX_0x0 HEX_0x0   PARITY_1
+IDLE
+
+wait_time(1);
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "13"); IDLE
+
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Using 'Mode Code == 0x1F'
+// @@I  0x210000B0
+
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d  Generate a Mode Command by setting the Mode Code to 0x1F.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4          (4<<11)
+// R/T=1         (1<<10)
+// SUB_ADDR=0x1F (0x1F<<5)  (Mode Code: 11111b)
+// MODE=2         (2<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x7 HEX_0xE HEX_0x2   PARITY_1
+IDLE
+// @@d  Receiver RT of the mode code returns a Status Word but no Data Words
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+wait_time(1);
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "14"); IDLE
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Parity Error
+// @@I  0x210000C0
+
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x4   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+IDLE
+// @@d Inject a parity error into the RT status word.
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_1
+IDLE
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "15"); IDLE
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Too Few Data Words (0)
+// @@I  0x210000D0
+
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+// @@d Command word indicates five data words.
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x5   PARITY_0
+// @@d Inject an 'IDLE' immediately
+IDLE
+
+wait_time(1);
+
+// trigger test verify in host code
+Host.write_val("g_test_number", "16"); IDLE
+
+
+
+//--------------------------------------------------------
+//  That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+// exit done from Host target script
+//wait_time(300);
+//exit();
+#else
+wait_time(100);
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_

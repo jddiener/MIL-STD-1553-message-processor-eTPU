@@ -1,0 +1,102 @@
+//#define CONFIG_MT
+#include "..\common_test\CommonInit.ETpuCommand"
+
+// include auto-def sim support
+#include "etec_sim_autodef.h"
+
+//------------------------------------------------------------------------------
+// @@L1 Basic Word Transmitter Tests
+//------------------------------------------------------------------------------
+
+// wait for initial IDLE
+at_time(5);
+
+//--------------------------------------------------------
+// @@L2 Test: Test Command Sync, One Word
+// @@I 0x10001100
+
+//write_chan_mode   ( TX_A, MILSTD1553_TX_FM0_BCRT_RTBC);
+write_chan_data_autodef ( TX_A, MS1553, _synchType, 
+	GET_CHAN_ENUM_VAL( MS1553, TX_TYPE, TT_CMD_STATUS ));
+write_chan_data24 ( TX_A, _CPBA24_MS1553__transmitWord_, 0x80ffff);
+write_chan_hsrr   ( TX_A, 1);
+
+at_time(30);
+
+//--------------------------------------------------------
+// @@L2 Test: Test Command Sync, Two Words
+// @@I 0x10001200
+
+write_chan_data_autodef ( TX_A, MS1553, _synchType, 
+	GET_CHAN_ENUM_VAL( MS1553, TX_TYPE, TT_CMD_STATUS ));
+write_chan_data24 ( TX_A, _CPBA24_MS1553__transmitWord_, 0x80aaaa);
+write_chan_hsrr   ( TX_A, 1);
+wait_time(5);
+write_chan_data_autodef ( TX_A, MS1553, _synchType, 
+	GET_CHAN_ENUM_VAL( MS1553, TX_TYPE, TT_CMD_STATUS ));
+write_chan_data24 ( TX_A, _CPBA24_MS1553__transmitWord_, 0x805555);
+
+at_time(80);
+
+//--------------------------------------------------------
+// @@L2 Test: Test Command Sync and Data Words
+// @@I 0x10001300
+
+write_chan_data_autodef ( TX_A, MS1553, _synchType, 
+	GET_CHAN_ENUM_VAL( MS1553, TX_TYPE, TT_CMD_STATUS ));
+write_chan_data24 ( TX_A, _CPBA24_MS1553__transmitWord_, 0x801234);
+write_chan_hsrr   ( TX_A, 1);
+wait_time(5);
+write_chan_data_autodef ( TX_A, MS1553, _synchType, 
+	GET_CHAN_ENUM_VAL( MS1553, TX_TYPE, TT_DATA ));
+write_chan_data24 ( TX_A, _CPBA24_MS1553__transmitWord_, 0x801111);
+wait_time(20);
+write_chan_data_autodef ( TX_A, MS1553, _synchType, 
+	GET_CHAN_ENUM_VAL( MS1553, TX_TYPE, TT_DATA ));
+write_chan_data24 ( TX_A, _CPBA24_MS1553__transmitWord_, 0x802222);
+wait_time(20);
+write_chan_data_autodef ( TX_A, MS1553, _synchType, 
+	GET_CHAN_ENUM_VAL( MS1553, TX_TYPE, TT_DATA ));
+write_chan_data24 ( TX_A, _CPBA24_MS1553__transmitWord_, 0x803333);
+
+
+wait_time(100);
+
+// verify data received
+verify_global_data24(RX_DATA_BUFFER + 0x00, 0xffff);
+verify_global_data24(RX_DATA_BUFFER + 0x04, 0xaaaa);
+verify_global_data24(RX_DATA_BUFFER + 0x08, 0x5555);
+verify_global_data24(RX_DATA_BUFFER + 0x0c, 0x1234);
+verify_global_data24(RX_DATA_BUFFER + 0x10, 0x1111);
+verify_global_data24(RX_DATA_BUFFER + 0x14, 0x2222);
+verify_global_data24(RX_DATA_BUFFER + 0x18, 0x3333);
+
+
+// test shutdown
+write_chan_data_autodef ( TX_A, MS1553, _synchType, 
+	GET_CHAN_ENUM_VAL( MS1553, TX_TYPE, TT_CMD_STATUS ));
+write_chan_data24 ( TX_A, _CPBA24_MS1553__transmitWord_, 0x8037BF);
+write_chan_hsrr   ( TX_A, 1);
+
+wait_time(10);
+
+write_chan_hsrr   ( TX_A, 2); // shutdown
+wait_time(2);
+verify_chan_output_pin(TX_A, 0);
+verify_chan_output_pin(TX_B, 0);
+
+wait_time(20);
+verify_chan_data8( RX_A, _CPBA8_MS1553__missingBitError_, 1);
+
+
+save_cumulative_file_coverage("etec_MS1553_TX.c", "RX_TX_etpu_test\\TX_Test.CoverageData");
+
+
+//--------------------------------------------------------
+//  That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+wait_time(300);
+exit();
+#else
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_

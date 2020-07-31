@@ -1,0 +1,100 @@
+// FILE: MtCoverageTest.ETpuCommand
+// Copyright (C) 2020 ASH WARE, Inc. All Rights Reserved.
+
+
+//=============================================================================
+
+// first, load cumulative coverage from requirements-based tests
+
+load_cumulative_file_coverage("etec_MS1553_MT_RX.c", "MT_etpu_test\\MT_BcToRtFaults.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_MT_RX.c", "MT_etpu_test\\MT_ModeCommandFaults.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_MT_RX.c", "MT_etpu_test\\MT_RtToBcFaults.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_MT_RX.c", "MT_etpu_test\\MT_RtToRtFaults.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_MT_RX.c", "MT_etpu_test\\MT_FunctionalTest.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_MT_RX.c", "MT_etpu_test\\MT_FilterTest.CoverageData");
+
+//=============================================================================
+
+// perform additional tests to get 100% coverage
+
+// need to test out-of-range values in switch statements (could only happen due to memory corruption)
+
+#define CONFIG_MT
+#include "..\common_test\CommonInit.ETpuCommand"
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+// bad state for HandleWord()
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x3   PARITY_1
+
+// insert invalid state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, 27);
+INVALID_LONG_IDLE
+
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, INVALID_WORD);
+
+
+// bad state for FoundIdle()
+
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x3   PARITY_1
+wait_time(1.5);
+
+// insert invalid state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, 0);
+INVALID_LONG_IDLE
+
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2623);
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x3   PARITY_1
+wait_time(1.5);
+
+// insert invalid state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, 33);
+INVALID_LONG_IDLE
+
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2623);
+
+
+
+//=============================================================================
+
+// infer entry coverage (TBD)
+
+// verify coverage
+
+verify_file_coverage_ex("etec_MS1553_MT_RX.c", 100, 100, 0);
+write_coverage_file("MT_etpu_test\\MT.Coverage");
+save_cumulative_file_coverage("etec_MS1553_MT_RX.c", "MT_etpu_test\\MT.TotalCoverageData");
+
+//=============================================================================
+
+//=============================================================================
+//==========      That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+wait_time(5000);
+exit();
+#else
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_
+

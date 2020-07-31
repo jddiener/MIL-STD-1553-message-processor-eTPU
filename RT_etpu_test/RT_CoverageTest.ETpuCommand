@@ -1,0 +1,118 @@
+// FILE: RT_CoverageTest.ETpuCommand
+// Copyright (C) 2020 ASH WARE, Inc. All Rights Reserved.
+
+// RT code coverage
+
+//=============================================================================
+
+// first, load cumulative coverage from requirements-based tests
+
+load_cumulative_file_coverage("etec_MS1553_RT_RX.c", "RT_etpu_test\\RT_BcToRt_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_RX.c", "RT_etpu_test\\RT_RtToBc_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_RX.c", "RT_etpu_test\\RT_RtToRt_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_RX.c", "RT_etpu_test\\RT_ModeCommand_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_RX.c", "RT_etpu_test\\RT_BcToRtFaults_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_RX.c", "RT_etpu_test\\RT_RtToBcFaults_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_RX.c", "RT_etpu_test\\RT_RtToRtFaults_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_RX.c", "RT_etpu_test\\RT_ModeCommandFaults_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_RX.c", "RT_etpu_test\\RT_TxDataWordInhibit_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_RX.c", "RT_etpu_test\\RT_TxInhibit_Test_RX.CoverageData");
+
+load_cumulative_file_coverage("etec_MS1553_RT_TX.c", "RT_etpu_test\\RT_BcToRt_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_TX.c", "RT_etpu_test\\RT_RtToBc_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_TX.c", "RT_etpu_test\\RT_RtToRt_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_TX.c", "RT_etpu_test\\RT_ModeCommand_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_TX.c", "RT_etpu_test\\RT_BcToRtFaults_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_TX.c", "RT_etpu_test\\RT_RtToBcFaults_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_TX.c", "RT_etpu_test\\RT_RtToRtFaults_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_TX.c", "RT_etpu_test\\RT_ModeCommandFaults_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_TX.c", "RT_etpu_test\\RT_TxDataWordInhibit_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_RT_TX.c", "RT_etpu_test\\RT_TxInhibit_Test_TX.CoverageData");
+
+
+//=============================================================================
+
+// perform additional tests to get 100% coverage
+
+// need to test out-of-range values in switch statements (could only happen due to memory corruption)
+
+#define CONFIG_RT
+#include "..\common_test\CommonInit.ETpuCommand"
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+// bad state for HandleWord()
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x3   PARITY_1
+
+// insert invalid state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, 27);
+INVALID_LONG_IDLE
+
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, INVALID_WORD);
+
+
+// bad state for FoundIdle()
+
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x3   PARITY_1
+wait_time(1.5);
+
+// insert invalid state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, 0);
+INVALID_LONG_IDLE
+
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2623);
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x3   PARITY_1
+wait_time(1.5);
+
+// insert invalid state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, 33);
+INVALID_LONG_IDLE
+
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2623);
+
+
+//=============================================================================
+
+// infer entry coverage (TBD)
+
+// verify coverage
+
+verify_file_coverage_ex("etec_MS1553_RT_RX.c", 100, 100, 0);
+verify_file_coverage_ex("etec_MS1553_RT_TX.c", 100, 100, 0);
+write_coverage_file("RT_etpu_test\\RT.Coverage");
+save_cumulative_file_coverage("etec_MS1553_RT_RX.c", "RT_etpu_test\\RT_RX.TotalCoverageData");
+save_cumulative_file_coverage("etec_MS1553_RT_TX.c", "RT_etpu_test\\RT_TX.TotalCoverageData");
+
+//=============================================================================
+
+//=============================================================================
+//==========      That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+wait_time(5000);
+exit();
+#else
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_
+

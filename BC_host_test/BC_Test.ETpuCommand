@@ -1,0 +1,208 @@
+// Bus Controller host test
+//
+// This simulation script stimulates a BC eTPU driver in order to
+// test the BC host API code.
+
+#define CONFIG_BC
+#include "..\common_test\CommonHostInit.ETpuCommand"
+
+wait_time(1000); // wait until eTPU initialization is complete
+wait_time(200); // delay to queue up test 1
+
+//------------------------------------------------------------------------------
+// @@L1 Bus Controller (BC) Functional Tests
+//------------------------------------------------------------------------------
+
+
+//--------------------------------------------------------
+// @@L2 Test: Controller to RT 'Receive' Transfer
+// @@I 0x81000000
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+wait_time(200);
+
+
+//--------------------------------------------------------
+// @@L2 Test: RT to Controller 'Transmit' Transfer
+// @@I  0x81000010
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+wait_time(200);
+
+// @@d  Test another message but with 4 Data words.
+wait_time(200);
+
+// @@d  Test another message but with 1 Data word
+wait_time(200);
+
+
+//--------------------------------------------------------
+// @@L2 Test: RT to RT Transfer
+// @@I 0x81000020
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+BC_WORD_1           // 20.5
+BC_WORD_X           // 20
+IDLE                // 4
+// terminal 6 RT transmit
+CMD_SYNCH     HEX_0x3 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x1 HEX_0x1 HEX_0x1 HEX_0x1   PARITY_1
+wait_time(200 - 20.5 - 20 - 4 - 2*20);
+
+
+//--------------------------------------------------------
+// @@L2 Test: Bus Controller to ALL RT's broadcast
+// @@I 0x81000030
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+wait_time(200);
+
+
+//--------------------------------------------------------
+// @@L2 TEST: RT to ALL RT Broadcast
+// @@I 0x81000040
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+BC_WORD_1           // 20.5
+BC_WORD_X           // 20
+IDLE                // 4
+// terminal 6 RT transmit
+CMD_SYNCH     HEX_0x3 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x1 HEX_0x1 HEX_0x1 HEX_0x1   PARITY_1
+wait_time(200 - 20.5 - 20 - 4 - 2*20);
+
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Transmit Without Data
+// @@I  0x81000050
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+wait_time(200);
+
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Transmit With Data
+// @@I  0x81000060
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+wait_time(200);
+
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Receive With Data
+// @@I  0x81000070
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+wait_time(200);
+
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Broadcast Without Data
+// @@I  0x81000080
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+wait_time(200);
+
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Broadcast With Data
+// @@I  0x81000090
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+wait_time(200);
+
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Using 'RT ADDRESS == 0x00'
+// @@I  0x810000A0
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+BC_WORD_1           // 20.5
+IDLE                // 4
+// terminal 24 RT status
+CMD_SYNCH    HEX_0xC HEX_0x0 HEX_0x0 HEX_0x0   PARITY_1
+wait_time(200 - 20.5 - 4 - 1*20);
+
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Using 'Mode Code == 0x1F'
+// @@I  0x810000B0
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+wait_time(200);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Parity Error
+// @@I  0x810000C0
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+BC_WORD_1           // 20.5
+IDLE                // 4
+CMD_SYNCH    HEX_0x3 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_1
+// @@d Inject a parity error into data word.
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_1
+wait_time(200 - 20.5 - 4 - 2*20);
+
+
+//------------------------------------------------------------------------------
+// @@L2 FAULT: Too Few Data Words (0)
+// @@I  0x810000D0
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+BC_WORD_1           // 20.5
+IDLE                // 4
+CMD_SYNCH    HEX_0x3 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_1
+// @@d missing data word
+//DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_1
+wait_time(200 - 20.5 - 4 - 1*20);
+
+
+//--------------------------------------------------------
+// @@L2 Test: Verify after shutdown no activity from eTPU
+// @@I 0x810000E0
+
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+RESET_BC_RECEIVE_BUFFER
+wait_time(200);
+
+
+//--------------------------------------------------------
+//  That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+// exit done from Host target script
+//wait_time(300);
+//exit();
+#else
+wait_time(5000);
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_

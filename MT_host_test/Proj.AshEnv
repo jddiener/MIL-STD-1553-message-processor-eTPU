@@ -1,0 +1,170 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<user creator="ASH WARE, Inc." version="2.72.2.0">
+  <source_code_search />
+  <app_dimensions x="-8" y="-8" w="1936" h="1056" />
+  <splitter name="projectBtmSplitter" distance="566" total="942" orientation="horizontal" />
+  <splitter name="projectRhtSplitter" parent="projectBtmSplitter" order="1" distance="273" total="1920" orientation="vertical" />
+  <splitter name="editSplitter" parent="projectRhtSplitter" order="2" distance="828" total="1643" orientation="vertical" />
+  <splitter name="outputSplitter" parent="projectBtmSplitter" order="2" distance="1288" total="1920" orientation="vertical" />
+  <line_info_mgr />
+  <TabPage type="LogicAnalyzer" ctrl="output1TabControl">
+    <ScopeSettings selected_channel="5" selected_cursor="0" auto_scroll="True" first_chan="0" width="125" />
+    <ScopeTimes>
+      <LeftSide word_a="0" word_b="543" word_c="1139105642" />
+      <Width word_a="0" word_b="72" word_c="422131245" />
+      <LeftCursor word_a="0" word_b="324" word_c="1882117092" />
+      <RightCursor word_a="0" word_b="325" word_c="2644607567" />
+    </ScopeTimes>
+    <ClocksTimeOptions />
+    <TimeDisplayOptions />
+    <ThreadGroups>
+      <Host index="0" group_a="0" group_b="0" group_c="0" group_d="0" group_e="0" group_f="0" group_g="0" group_h="0" />
+      <eTPU_A index="1" group_a="1" group_b="2" group_c="4" group_d="8" group_e="16" group_f="32" group_g="64" group_h="128" />
+      <eTPU_B index="2" group_a="1" group_b="2" group_c="4" group_d="8" group_e="16" group_f="32" group_g="64" group_h="128" />
+    </ThreadGroups>
+    <ScopeChannels>
+      <ScopeChan index="0" name="_ch8.in" alias="_ch8.in" target_index="1" height="31" chan_state_mask="255" />
+      <ScopeChan index="1" name="_ch9.in" alias="_ch9.in" target_index="1" height="31" chan_state_mask="255" />
+      <ScopeChan index="2" name="g_mt_interrupt_active" target_index="0" height="52" is_discrete="True" min_value="0" max_value="1" />
+      <ScopeChan index="3" name="_ThreadsIdle" alias="_ThreadsIdle_A" target_index="1" height="31" />
+      <ScopeChan index="4" name="g_test_number" target_index="0" height="56" is_discrete="True" min_value="0" max_value="20" />
+      <ScopeChan index="5" name="_ThreadsIdle" alias="_ThreadsIdle_B" target_index="2" height="31" />
+    </ScopeChannels>
+  </TabPage>
+  <TabPage type="Breakpoint" is_closed="true" ctrl="projectTabControl" />
+  <TabPage type="TraceBuf" is_closed="true" ctrl="output2TabControl">
+    <Host />
+    <eTPU_A />
+    <eTPU_B />
+  </TabPage>
+  <TabPage type="Script" ctrl="edit1TabControl" file="Host.Cpu32Command" top_line="0" sel="true" start_pos="117" len="0" sel_text="" />
+  <TabPage type="Script" ctrl="edit1TabControl" file="..\common_test\CommonHostInit.ETpuCommand" top_line="47" start_pos="2210" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit1TabControl" file="main.c" top_line="171" start_pos="8243" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit1TabControl" file="..\host_code\etpu_ms1553_isr.c" top_line="0" start_pos="2291" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit1TabControl" file="..\host_code\etpu_util_ext.c" top_line="1379" start_pos="44150" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit1TabControl" file="..\host_code\etpu_ms1553.c" top_line="190" start_pos="11626" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit1TabControl" file="..\host_code\etpu_init.c" top_line="0" start_pos="0" len="25" sel_text="/************************" />
+  <TabPage type="Source" ctrl="edit1TabControl" file="..\..\..\..\Consulting\JohnDeere\EPS\eTPUEngineFunctions\SourceCode\etpu_eps.h" top_line="0" start_pos="810" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit1TabControl" file="..\etpu_code\etec_MS1553_RX.c" top_line="100" start_pos="4472" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit1TabControl" file="..\etpu_code\etec_MS1553_MT_RX.c" top_line="1005" start_pos="34862" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit1TabControl" file="..\etpu_code\etec_MS1553_RT_RX.c" top_line="649" start_pos="22982" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit1TabControl" file="..\host_code\etpu_ms1553_mt.c" top_line="0" start_pos="563" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit1TabControl" file="..\host_code\etpu_ms1553_rt.c" top_line="0" start_pos="181" len="0" sel_text="" />
+  <TabPage type="Script" ctrl="edit2TabControl" file="MT_Test.ETpuCommand" top_line="411" sel="true" start_pos="12008" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit2TabControl" file="..\host_code\etpu_util_ext.h" top_line="0" start_pos="435" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit2TabControl" file="..\host_code\etpu_config.h" top_line="0" start_pos="0" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit2TabControl" file="..\host_code\etpu_ms1553_isr.h" top_line="0" start_pos="190" len="1" sel_text="*" />
+  <TabPage type="Source" ctrl="edit2TabControl" file="..\host_code\etpu_ms1553.h" top_line="0" start_pos="131" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit2TabControl" file="..\host_code\etpu_ms1553_mt.h" top_line="0" start_pos="161" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit2TabControl" file="..\host_code\etpu_ms1553_rt.h" top_line="0" start_pos="161" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit2TabControl" file="..\etpu_code\etpu_ab_set_struct.h" top_line="69" start_pos="2790" len="11" sel_text="_txBaseChan" />
+  <TabPage type="Script" ctrl="edit2TabControl" file="..\etpu_code\etec_MS1553_common.h" top_line="7" start_pos="1177" len="0" sel_text="" />
+  <TabPage type="TraceWin" ctrl="edit2TabControl">
+    <Enablement>
+      <Host />
+      <eTPU_A target_disabled="true" />
+      <eTPU_B target_disabled="true" />
+    </Enablement>
+  </TabPage>
+  <TabPage type="RegisterWindow" ctrl="edit2TabControl" target_tag="eTpu" win_type="FTWT_CONFIG" target="eTPU_A" top_line="0" />
+  <TabPage type="Source" ctrl="edit2TabControl" file="..\host_code\mpc5554_vars.h" top_line="0" start_pos="0" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit2TabControl" file="..\host_code\etpu_auto_api.h" top_line="0" start_pos="0" len="0" sel_text="" />
+  <TabPage type="Script" ctrl="edit2TabControl" file="..\etpu_code\etpu_ab_set_defines.h" top_line="221" start_pos="10527" len="0" sel_text="" />
+  <TabPage type="Output" ctrl="output1TabControl" sel="true" />
+  <TabPage type="LocalVariable" ctrl="output1TabControl" target="0">
+    <Columns width_1="297" width_2="165" />
+  </TabPage>
+  <TabPage type="CallStack" ctrl="output1TabControl" target="0">
+    <Columns />
+  </TabPage>
+  <TabPage type="RegisterWindow" ctrl="output1TabControl" target_tag="eTpu" win_type="FTWT_HOST_INTERFACE" target="eTPU_A" top_line="0" />
+  <TabPage type="Watch" ctrl="output2TabControl" sel="true">
+    <Columns width_1="407" />
+    <SymbolList>
+      <Symbol name="g_ms1553_etpu_channel_instance_map" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_mt_interrupt_active" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_command_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_mode_data_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_data_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_status_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_message_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_tx_inhibited_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_error_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_mt_data" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_test_number" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_mt_test_results" target="0" display_mode="GSDT_hex" script="False" />
+    </SymbolList>
+    <Expand name="g_mt_data" />
+    <Expand name="g_mt_test_results" />
+  </TabPage>
+  <TabPage type="ChannelFrame" ctrl="output2TabControl" target="1" channel="8">
+    <Columns width_1="240" width_2="241" width_3="225" />
+  </TabPage>
+  <TabPage type="RegisterWindow" ctrl="output2TabControl" target_tag="eTpu" win_type="FTWT_COUNTERS" target="eTPU_A" top_line="0" />
+  <TabPage type="MemoryWindow" ctrl="output2TabControl" target="eTPU_A" fc="3" bpd="4" bpa="1" box="0" row="0" addr="0" nib="0" cfr="4" />
+  <TabPage type="Project" ctrl="projectTabControl" file="Proj.FullSysIdeProj" sel="true" />
+  <TabPage type="RegisterWindow" ctrl="projectTabControl" target_tag="eTpu" win_type="FTWT_REGISTER" target="eTPU_A" top_line="0" />
+  <selected_project_node name="MT_Test.ETpuCommand" />
+  <!--Saved last-used directories-->
+  <last_dir type="SourceAsmGtm" dir="..\host_code\" />
+  <last_dir type="SourceH" dir="..\host_code\" />
+  <last_dir type="ExternalBuildExe" dir="..\etpu_code\" />
+  <search_dialog case="true" scripts="true">
+    <find val="etpu_ms1553_register_instance" />
+    <find val="MS1553_STATE_BC_TO_RT_AWAITING_IDLE_A" />
+    <find val="MessageComplete_MT" />
+    <find val="MS1553_STATE_RT_TO_BC_AWAITING_IDLE_B" />
+    <find val="MESSAGE_DATA_VALID" />
+    <find val="MESSAGE_STATUS_VALID" />
+    <find val="etpu_config_t" />
+    <find val="fs_etpu_interrupt_enable_ext" />
+    <find val="fs_etpu_enable_ext" />
+    <find val="etpu_a_tcr1_freq" />
+    <replace val="etpu_ms1553_register_instance" />
+    <replace val="MS1553_STATE_BC_TO_RT_AWAITING_IDLE_A" />
+    <replace val="MessageComplete_MT" />
+    <replace val="MS1553_STATE_RT_TO_BC_AWAITING_IDLE_B" />
+    <replace val="MESSAGE_DATA_VALID" />
+    <replace val="MESSAGE_STATUS_VALID" />
+    <replace val="etpu_config_t" />
+    <replace val="fs_etpu_interrupt_enable_ext" />
+    <replace val="fs_etpu_enable_ext" />
+    <replace val="etpu_a_tcr1_freq" />
+    <directory val="C:\GIT\ASHWARE\Tests\Drivers\MilStd1553\MT_host_test\" />
+    <directory val="C:\ASHWARE\GIT\ASHWARE\Tests\Drivers\MilStd1553\MT_host_test\" />
+    <file_types val="*.c,*.h" />
+    <file_types val="*.ETpuCommand" />
+    <file_types val="*.Vector" />
+  </search_dialog>
+  <workshops enabled="True" active_index="1" />
+  <ide_is_setting />
+  <step_asm_multiple val="10" />
+  <step_angle_teeth_multiple val="3" />
+  <is_goto_abs_angle val="false" />
+  <goto_absolute_angle cycles="1" degrees="2" hundredths="3" />
+  <goto_delta_angle cycles="4" degrees="5" hundredths="6" />
+  <goto_absolute_time ks="0" sec="0" ms="2" us="250" ns="0" />
+  <goto_delta_time ks="0" sec="0" ms="0" us="10" ns="0" />
+  <is_goto_abs_time val="false" />
+  <goto_line_num val="10" />
+  <mem_win_get_addr val="48" />
+  <make_node target="Host" file="Host.Cpu32Command" time="5248929071634920052">
+    <dependent_file file="Host.Cpu32Command" time="5248929071634920052" />
+  </make_node>
+  <source_file name="..\host_code\etpu_ms1553_isr.h" tool="None" />
+  <!--=======================================================-->
+  <!--======    START TARGET-SPECIFIC SETTINGS        =======-->
+  <target name="Host" />
+  <!--======    END TARGET-SPECIFIC SETTINGS          =======-->
+  <!--=======================================================-->
+  <!--=======================================================-->
+  <!--======    START TARGET-SPECIFIC SETTINGS        =======-->
+  <target name="eTPU_A" />
+  <!--======    END TARGET-SPECIFIC SETTINGS          =======-->
+  <!--=======================================================-->
+  <!--=======================================================-->
+  <!--======    START TARGET-SPECIFIC SETTINGS        =======-->
+  <target name="eTPU_B" />
+  <!--======    END TARGET-SPECIFIC SETTINGS          =======-->
+  <!--=======================================================-->
+</user>

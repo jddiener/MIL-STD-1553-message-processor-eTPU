@@ -1,0 +1,82 @@
+// 1553 TR vector file
+
+// set base wave frequency to 10 MHz
+frequency 10
+
+// 1553 input signals (pin names)
+node RX_A	ch8.in
+node RX_B	ch9.in
+node Thread_A             ThreadsGroupA
+node Thread_B             ThreadsGroupB
+
+
+group RX_1553 RX_A RX_B
+
+state LL 00
+state LH 01
+state HL 10
+state HH 11
+
+wave RX_1553
+
+	// -------------------------------------------------------
+	// Data synch then first two data bits, '0', '0'
+	// Idle  -->  Cmd.Synch  -->  0x0000  -->  Parity.1
+	(LL 50)1    (LH 15 HL 15)1
+		(LH 5 HL 5) 16
+	(HL 5 LH 5)1
+
+	// -------------------------------------------------------
+	// Data synch then first two data bits, '0', '1'
+	// Idle  -->  Cmd.Synch  -->  0x4000  -->  Parity.0
+	(LL 50)1    (LH 15 HL 15)1
+		(LH 5 HL 5) 1    (HL 5 LH 5) 1    (LH 5 HL 5) 14
+	(LH 5 HL 5)1
+
+	// -------------------------------------------------------
+	// Data synch then first two data bits, '1', '0'
+	// Idle  -->  Cmd.Synch  -->  0x8000  -->  Parity.0
+	(LL 50)1    (LH 15 HL 15)1
+		(HL 5 LH 5) 1    (LH 5 HL 5) 15
+	(LH 5 HL 5)1
+
+	// -------------------------------------------------------
+	// Data synch then first two data bits, '1', '1'
+	// Idle  -->  Cmd.Synch  -->  0xC000  -->  Parity.`
+	(LL 50)1    (LH 15 HL 15)1
+		(HL 5 LH 5) 2    (LH 5 HL 5) 14
+	(HL 5 LH 5)1
+
+
+	// -------------------------------------------------------
+	// Command synch then first two data bits, '0', '0'
+	// Idle  -->  Cmd.Synch  -->  0x0000  -->  Parity.1
+	(LL 50)1    (HL 15 LH 15)1
+		(LH 5 HL 5) 16
+	(HL 5 LH 5)1
+
+	// -------------------------------------------------------
+	// Command synch then first two data bits, '0', '1'
+	// Idle  -->  Cmd.Synch  -->  0x4000  -->  Parity.0
+	(LL 50)1    (HL 15 LH 15)1
+		(LH 5 HL 5) 1    (HL 5 LH 5) 1    (LH 5 HL 5) 14
+	(LH 5 HL 5)1
+
+	// -------------------------------------------------------
+	// Command synch then first two data bits, '1', '0'
+	// Idle  -->  Cmd.Synch  -->  0x8000  -->  Parity.0
+	(LL 50)1    (HL 15 LH 15)1
+		(HL 5 LH 5) 1    (LH 5 HL 5) 15
+	(LH 5 HL 5)1
+
+	// -------------------------------------------------------
+	// Command synch then first two data bits, '1', '1'
+	// Idle  -->  Cmd.Synch  -->  0xC000  -->  Parity.`
+	(LL 50)1    (HL 15 LH 15)1
+		(HL 5 LH 5) 2    (LH 5 HL 5) 14
+	(HL 5 LH 5)1
+
+
+	// Idle
+	LL *
+end

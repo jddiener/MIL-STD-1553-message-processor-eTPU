@@ -1,0 +1,81 @@
+#include "..\common_test\CommonInit.ETpuCommand"
+
+// Must be specified on the command line
+//vector("NoWaveform.Vector");
+
+//------------------------------------------------------------------------------
+// @@L1 Basic Word Receiver Tests
+//------------------------------------------------------------------------------
+//--------------------------------------------------------
+// @@L2 Test: Find Initial Idle/Gap On Start
+// @@I 0x10000500
+
+//--------------------------------------------------------
+// TEST: Seek synch following
+
+// Come out of reset in the middle of a transmission
+//   - verify that no error occurs (no synch detected)
+//   - verify that following a 'MINIMUM IDLE' synch occurs
+//     and words are detected
+
+// Receive a valid Word, verify no parity error
+RESET_RECEIVE_BUFFER
+
+// Start transmission in middle of word
+    HEX_0x3 HEX_0x1 HEX_0xC    PARITY_0
+wait_time(1);
+VERIFY_NO_ERRORS
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, 0xBAD);
+
+// Verify error transmission ceases
+// right when parity would pass
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH
+	HEX_0x5
+	HEX_0x3
+	HEX_0x1
+	HEX_0xC
+PARITY_0
+wait_time(1);
+VERIFY_NO_ERRORS
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, 0x531C);
+
+// Same as before, but this time test with
+//  - Incomplete transmission ends with ODD PARITY
+//  - Complete transmission is a DATA SYNCH
+
+OFF
+wait_time(10);
+RESET_RECEIVE_BUFFER
+
+// Start transmission in middle of word
+    HEX_0x3 HEX_0x1 HEX_0xD    PARITY_1
+wait_time(1);
+VERIFY_NO_ERRORS
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, 0xBAD);
+
+// Verify error transmission ceases
+// right when parity would pass
+RESET_RECEIVE_BUFFER
+IDLE DATA_SYNCH
+	HEX_0x5
+	HEX_0x3
+	HEX_0x1
+	HEX_0xD
+PARITY_1
+wait_time(1);
+VERIFY_NO_ERRORS
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, 0x531D);
+
+
+save_cumulative_file_coverage("etec_MS1553_RX.c", "RX_TX_etpu_test\\RX_SeekSynchTest.CoverageData");
+
+
+//--------------------------------------------------------
+//  That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+wait_time(300);
+exit();
+#else
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_

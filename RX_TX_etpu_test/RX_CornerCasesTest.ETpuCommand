@@ -1,0 +1,119 @@
+#include "..\common_test\CommonInit.ETpuCommand"
+#include "..\etpu_code\etpu_tester_common.h"
+
+// Must be specified on the command line
+//vector("NoWaveform.Vector");
+
+//------------------------------------------------------------------------------
+// @@L1 Basic Word Receiver Tests
+//------------------------------------------------------------------------------
+//--------------------------------------------------------
+// @@L2 Test: Verify RX Works Under eTPU Latency Conditions
+// @@I 0x10000700
+
+
+#define TESTER_0P9_bits  (132*10/9/2 - 25)
+#define TESTER_2P0_bits  (2*132*10/9/2 - 25)
+#define TESTER_3P0_bits  (3*132*10/9/2 - 25)
+
+IDLE
+
+//--------------------------------------------------------
+// TEST:
+//   Verify that if both
+//      MATCH-A (for HandleWord) occurs before the thread for
+//      TDL-A  (for parity bit) then first the Parity-thread occurs,
+//      and then the HandleWord thread.
+
+// Receive a valid Word, verify no parity error
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH
+	HEX_0x3
+	HEX_0x8
+	HEX_0x5
+	HEX_0x5
+
+// Generate a DUMMY thread
+// that delays TDL thread until AFTER the MATCH thread
+// HOWEVER, since transitions block matches,
+// The MATCH is not enabled until the (blocking) TDL is negated,
+// So it works correctly!
+write_chan_data24 (TESTER_CHAN, _CPBA24_Tester_LatencyDuration_, TESTER_2P0_bits);
+write_chan_hsrr   ( TESTER_CHAN, AW_TESTER_LATENCY_HSR );
+PARITY_0
+wait_time(3);
+VERIFY_NO_ERRORS
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, 0x3855);
+
+//--------------------------------------------------------
+// TEST:
+//   Verify that if both
+//      MATCH-A (for IdleDetect) occurs before the thread for
+//      TDL-A  (for SynchA) then first the IdleDetect-thread occurs,
+//      and then the SynchA thread.
+
+// Receive a valid Word, verify no parity error
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH
+	HEX_0x8
+	HEX_0x1
+	HEX_0x6
+	HEX_0xB
+PARITY_0
+RESET_RECEIVE_BUFFER
+
+// Generate a DUMMY thread
+// that delays TDL thread until AFTER the MATCH thread
+// HOWEVER, since transitions block matches,
+// The MATCH is not enabled until the (blocking) TDL is negated,
+// So it works correctly!
+write_chan_data24 (TESTER_CHAN, _CPBA24_Tester_LatencyStart_, TESTER_3P0_bits);
+write_chan_data24 (TESTER_CHAN, _CPBA24_Tester_LatencyDuration_, TESTER_2P0_bits);
+write_chan_hsrr   ( TESTER_CHAN, AW_TESTER_LATENCY_HSR );
+
+IDLE CMD_SYNCH
+	HEX_0x0
+	HEX_0xA
+	HEX_0x6
+	HEX_0x3
+PARITY_1
+
+
+
+wait_time(3);
+VERIFY_NO_ERRORS
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, 0x816B);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 4, 0xffff, 0x0A63);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 8, 0xffff, INVALID_WORD);
+
+
+wait_time(10);
+
+write_chan_hsrr(RX_A, 2); // shutdown
+
+IDLE CMD_SYNCH
+	HEX_0x0
+	HEX_0xA
+	HEX_0x6
+	HEX_0x3
+PARITY_1
+
+wait_time(3);
+VERIFY_NO_ERRORS
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, 0x816B);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 4, 0xffff, 0x0A63);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 8, 0xffff, INVALID_WORD); // verify shutdown RX ignored word
+
+
+
+save_cumulative_file_coverage("etec_MS1553_RX.c", "RX_TX_etpu_test\\RX_CornerCasesTest.CoverageData");
+
+
+//--------------------------------------------------------
+//  That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+wait_time(300);
+exit();
+#else
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_

@@ -1,0 +1,186 @@
+#include "..\common_test\CommonInit.ETpuCommand"
+
+// Must be specified on the command line
+//vector("NoWaveform.Vector");
+
+//------------------------------------------------------------------------------
+// @@L1 Basic Word Receiver Tests
+//------------------------------------------------------------------------------
+//--------------------------------------------------------
+// @@L2 Test: Detection of Parity and Missing Bit Faults
+// @@I 0x10010800
+
+//--------------------------------------------------------
+// TEST: transmission ceases error
+
+OFF
+wait_time(10);
+
+// Receive a valid Word, verify no parity error
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH    HEX_0x5 HEX_0x3 HEX_0x1 HEX_0xC    PARITY_0
+wait_time(1);
+VERIFY_NO_ERRORS
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, 0x531C);
+
+// Verify error transmission ceases
+// right when parity would pass
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH
+	HEX_0x5
+	HEX_0x3
+	HEX_0x1
+	D1 D1 D1 MISSING_BIT  // HEX_0xC
+MISSING_BIT
+wait_time(1);
+// Interestingly, this fault is detected via a 'parity' error
+verify_chan_data8( RX_A, _CPBA8_MS1553__missingBitError_, 1);
+verify_chan_data8( RX_A, _CPBA8_MS1553__parityError_, 0);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, INVALID_WORD);
+
+//--------------------------------------------------------
+// TEST: Missing Bit
+
+OFF
+wait_time(10);
+
+//----------------------
+// Receive a valid Word, verify no parity error
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH    HEX_0x5 HEX_0x3 HEX_0x1 HEX_0xC    PARITY_0
+wait_time(1);
+VERIFY_NO_ERRORS
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, 0x531C);
+
+// Verify error detected, bit-error at bit 0
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH
+	MISSING_BIT D1 D0 D1      //HEX_0x5
+	HEX_0x3
+	HEX_0x1
+	HEX_0xC
+PARITY_0
+wait_time(1);
+verify_chan_data8( RX_A, _CPBA8_MS1553__missingBitError_, 1);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, INVALID_WORD);
+
+//----------------------
+// Receive a valid Word, verify no parity error
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH    HEX_0x5 HEX_0x3 HEX_0x1 HEX_0xC    PARITY_0
+wait_time(1);
+VERIFY_NO_ERRORS
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, 0x531C);
+
+// Verify error detected, bit-error at bit 1
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH
+	D0 MISSING_BIT D0 D1      //HEX_0x5
+	HEX_0x3
+	HEX_0x1
+	HEX_0xC
+PARITY_0
+wait_time(1);
+// Interestingly
+// A missing '0' in this case is fault tolerent
+// The '0' is deduced from the parity bit and it all still works!
+verify_chan_data8( RX_A, _CPBA8_MS1553__missingBitError_, 0);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, 0x531C);
+
+//----------------------
+// Receive a valid Word, verify no parity error
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH    HEX_0x5 HEX_0x3 HEX_0x1 HEX_0xC    PARITY_0
+wait_time(1);
+VERIFY_NO_ERRORS
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, 0x531C);
+
+// Verify error detected, bit-error at bit 3
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH
+	D0 D1 MISSING_BIT D1      //HEX_0x5
+	HEX_0x3
+	HEX_0x1
+	HEX_0xC
+PARITY_0
+wait_time(1);
+verify_chan_data8( RX_A, _CPBA8_MS1553__missingBitError_, 1);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, INVALID_WORD);
+
+//----------------------
+// Receive a valid Word, verify no parity error
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH    HEX_0x5 HEX_0x3 HEX_0x1 HEX_0xC    PARITY_0
+wait_time(1);
+VERIFY_NO_ERRORS
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, 0x531C);
+
+// Verify error detected, bit-error at bit 6  ('0' --> Missing '0')
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH
+	HEX_0x5
+	D0 MISSING_BIT D1 D1  // HEX_0x3
+	HEX_0x1
+	HEX_0xC
+PARITY_0
+wait_time(1);
+// Interestingly, this fault is detected via a 'parity' error
+verify_chan_data8( RX_A, _CPBA8_MS1553__missingBitError_, 0);
+verify_chan_data8( RX_A, _CPBA8_MS1553__parityError_, 1);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, INVALID_WORD);
+
+//----------------------
+// Receive a valid Word, verify no parity error
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH    HEX_0x5 HEX_0x3 HEX_0x1 HEX_0xC    PARITY_0
+wait_time(1);
+VERIFY_NO_ERRORS
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, 0x531C);
+
+// Verify error detected, bit-error at bit 6  ('1' --> Missing '1')
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH
+	HEX_0x5
+	D0 D0 D1 MISSING_BIT  // HEX_0x3
+	HEX_0x1
+	HEX_0xC
+PARITY_0
+wait_time(1);
+// Interestingly, this fault is detected via a 'parity' error
+verify_chan_data8( RX_A, _CPBA8_MS1553__missingBitError_, 1);
+verify_chan_data8( RX_A, _CPBA8_MS1553__parityError_, 0);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0, 0xffff, INVALID_WORD);
+
+//--------------------------------------------------------
+// TEST: Parity Error
+
+OFF
+wait_time(10);
+
+// Receive a Word, verify no parity error
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH  HEX_0xA HEX_0xA HEX_0x5 HEX_0x5  PARITY_1
+wait_time(1);
+VERIFY_NO_ERRORS
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER+0, 0xffff, 0xAA55);
+
+// Receive the same word, but inject parity error, verify
+RESET_RECEIVE_BUFFER
+IDLE CMD_SYNCH  HEX_0xA HEX_0xA HEX_0x5 HEX_0x5  PARITY_0
+wait_time(1);
+verify_chan_data8( RX_A, _CPBA8_MS1553__parityError_,     1);
+verify_chan_data8( RX_A, _CPBA8_MS1553__missingBitError_, 0);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER+0, 0xffff, INVALID_WORD);
+
+
+save_cumulative_file_coverage("etec_MS1553_RX.c", "RX_TX_etpu_test\\RX_FaultTest.CoverageData");
+
+
+//--------------------------------------------------------
+//  That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+wait_time(300);
+exit();
+#else
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_

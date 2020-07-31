@@ -1,0 +1,346 @@
+// Remote Terminal test
+//
+// Test processing of RT->RT messages
+
+#define CONFIG_RT
+#include "..\common_test\CommonInit.ETpuCommand"
+
+// Must be specified on the command line
+//vector("NoWaveform.Vector");
+
+S32 i;
+for (i = 0; i < 2; i++)
+{
+    if (i == 0) write_chan_data8(RX_A, _CPBA8_MS1553__messageStatusInterruptMask_, 0);
+    if (i == 1) write_chan_data8(RX_A, _CPBA8_MS1553__messageStatusInterruptMask_, 0xff);
+
+//------------------------------------------------------------------------------
+// @@L1 Remote Terminal (RT) RT-RT Functional Tests
+//------------------------------------------------------------------------------
+
+//--------------------------------------------------------
+// @@L2 Test: RT to RT Transfer, matching receive terminal address
+// @@I 0x40000300
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d  Test a message from RT3 to the Receiver RT 4 (RT under test) with 3 data words
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// Master.Command(Terminal4)
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+// Terminal4.data  (3X)
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+// @@d  Test an RT-RT message wherein this RT is the transmitting RT
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+IDLE
+
+// RT=3     (3<<11)
+// R/T=0    (0<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=5    (5<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xA HEX_0x6 HEX_0x5   PARITY_0
+// RT=4     (4<<11)
+// R/T=1    (1<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=5    (5<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x4 HEX_0x6 HEX_0x5   PARITY_1
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2000 );
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x00, 0x815f);
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x04, 0x5663);
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x08, 0x64f9);
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x0C, 0x1234);
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x10, 0xacbd);
+RESPONSE_WORD_1
+RESPONSE_WORD_X
+RESPONSE_WORD_X
+RESPONSE_WORD_X
+RESPONSE_WORD_X
+RESPONSE_WORD_X
+
+IDLE
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x1a65 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x2465 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 5 );
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x1a65 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x2465 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x2000 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x1800 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x0c, 0xffff, 0x1234);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x10, 0xffff, 0xacbd);
+
+
+// now inject RT-RT message not addressed to this RT in any way, followed by 
+// RT-RT message that involves this terminal
+
+//--------------------------------------------------------
+// @@L2 Test: RT to RT Transfer, non-matching terminal address
+// @@I 0x40000310
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+IDLE
+
+// Master.Command
+// RT=7     (7<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=1    (1<<0)
+// @@d  First command word specifies the Receiver's RT address of '7'.
+CMD_SYNCH    HEX_0x3 HEX_0xA HEX_0x2 HEX_0x1   PARITY_1
+// Master.Command
+// RT=6     (6<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=1    (1<<0)
+// Terminal4.data  (3X)
+// @@d  Second command word specifies the Transmitter's RT address of '6'.
+CMD_SYNCH    HEX_0x3 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_1
+IDLE
+// Terminal.status
+// RT=6    (6<<11)
+// Err=0   (0<<0)
+CMD_SYNCH     HEX_0x3 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_1
+// Now the data, ...
+DATA_SYNCH    HEX_0x1 HEX_0x1 HEX_0x1 HEX_0x1   PARITY_1
+IDLE
+// Terminal.status
+// RT=7    (7<<11)
+// Err=0   (0<<0)
+CMD_SYNCH    HEX_0x3 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, INVALID_WORD);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x3a21 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x3621 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x3000 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x3800 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x1111);
+
+
+// @@d  This terminal as RT-RT receiver
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// Master.Command(Terminal4)
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+// Terminal4.data  (3X)
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2003 );
+RESPONSE_WORD_1
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0x2223 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, 0x2003 );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+
+//--------------------------------------------------------
+// test RT-RT broadcast, this terminal as transmitter
+//--------------------------------------------------------
+// @@L2 Test: RT to RT Broadcast Transfer 
+// @@I 0x40000320
+
+// @@d  Terminal is transmitter
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+IDLE
+
+// RT=31    (31<<11)
+// R/T=0    (0<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=5    (5<<0)
+CMD_SYNCH    HEX_0xF HEX_0xA HEX_0x6 HEX_0x5   PARITY_1
+// RT=4     (4<<11)
+// R/T=1    (1<<10)
+// LOC=0x13 (0x13<<5)
+// CNT=5    (5<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x4 HEX_0x6 HEX_0x5   PARITY_1
+
+write_chan_data24( TX_A, _CPBA24_MS1553__txStatusWord_, 0x2000 );
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x00, 0x815f);
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x04, 0x5663);
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x08, 0x64f9);
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x0C, 0x1234);
+write_chan_data24( TX_A, _CPBA_ARRAY_MS1553__txBuf_ + 0x10, 0xacbd);
+RESPONSE_WORD_1
+RESPONSE_WORD_X
+RESPONSE_WORD_X
+RESPONSE_WORD_X
+RESPONSE_WORD_X
+RESPONSE_WORD_X
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0xfa65 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x2465 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 5 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, INVALID_WORD);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_BROADCAST_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0xfa65 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x2465 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x2000 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, INVALID_WORD );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x0c, 0xffff, 0x1234);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x10, 0xffff, 0xacbd);
+
+
+// @@d  Test RT-RT broadcast, this terminal as a receiver
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+IDLE
+
+// Master.Command
+// RT=31    (31<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0xF HEX_0xA HEX_0x2 HEX_0x3   PARITY_0
+// Master.Command
+// RT=3     (3<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x1 HEX_0xE HEX_0x2 HEX_0x3   PARITY_0
+IDLE
+// Terminal4.data  (3X)
+CMD_SYNCH    HEX_0x1 HEX_0x8 HEX_0x0 HEX_0x0   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+
+
+IDLE
+
+VERIFY_NO_RT_ERRORS
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0xfa23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD );
+verify_chan_data24( RX_A, _CPBA24_MS1553__dataWordCnt_, 3 );
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+VERIFY_NO_MT_ERRORS
+eTPU_B.verify_chan_data8 ( MT_A, _CPBA8_MS1553__messageType_, RT_TO_RT_BROADCAST_XFR);
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord1_, 0xfa23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__cmdWord2_, 0x1e23 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord1_, 0x1800 );
+eTPU_B.verify_chan_data24( MT_A, _CPBA24_MS1553__rxStatusWord2_, INVALID_WORD );
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, MT_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+
+}
+
+
+//--------------------------------------------------------
+
+save_cumulative_file_coverage("etec_MS1553_RT_RX.c", "RT_etpu_test\\RT_RtToRt_Test_RX.CoverageData");
+save_cumulative_file_coverage("etec_MS1553_RT_TX.c", "RT_etpu_test\\RT_RtToRt_Test_TX.CoverageData");
+
+//--------------------------------------------------------
+//  That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+wait_time(300);
+exit();
+#else
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_

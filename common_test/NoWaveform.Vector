@@ -1,0 +1,11 @@
+// 1553 input signals (pin names)
+node Tester	ch1.in
+node RX_A	ch8.in
+node RX_B	ch9.in
+node TX_A	ch10.out
+node TX_B	ch11.out
+node Thread_A             ThreadsGroupA
+node Thread_B             ThreadsGroupB
+node Thread_Tester        ThreadsGroupC
+
+end

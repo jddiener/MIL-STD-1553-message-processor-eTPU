@@ -1,0 +1,356 @@
+// FILE: BC_CoverageTest.ETpuCommand
+// Copyright (C) 2020 ASH WARE, Inc. All Rights Reserved.
+
+// BC code coverage
+
+//=============================================================================
+
+// first, load cumulative coverage from requirements-based tests
+
+load_cumulative_file_coverage("etec_MS1553_BC_RX.c", "BC_etpu_test\\BC_BcToRt_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_BC_RX.c", "BC_etpu_test\\BC_RtToBc_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_BC_RX.c", "BC_etpu_test\\BC_RtToRt_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_BC_RX.c", "BC_etpu_test\\BC_ModeCommand_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_BC_RX.c", "BC_etpu_test\\BC_BcToRtFaults_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_BC_RX.c", "BC_etpu_test\\BC_RtToBcFaults_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_BC_RX.c", "BC_etpu_test\\BC_RtToRtFaults_Test_RX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_BC_RX.c", "BC_etpu_test\\BC_ModeCommandFaults_Test_RX.CoverageData");
+
+load_cumulative_file_coverage("etec_MS1553_BC_TX.c", "BC_etpu_test\\BC_BcToRt_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_BC_TX.c", "BC_etpu_test\\BC_RtToBc_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_BC_TX.c", "BC_etpu_test\\BC_RtToRt_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_BC_TX.c", "BC_etpu_test\\BC_ModeCommand_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_BC_TX.c", "BC_etpu_test\\BC_BcToRtFaults_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_BC_TX.c", "BC_etpu_test\\BC_RtToBcFaults_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_BC_TX.c", "BC_etpu_test\\BC_RtToRtFaults_Test_TX.CoverageData");
+load_cumulative_file_coverage("etec_MS1553_BC_TX.c", "BC_etpu_test\\BC_ModeCommandFaults_Test_TX.CoverageData");
+
+
+//=============================================================================
+
+// perform additional tests to get 100% coverage
+
+// need to test out-of-range values in switch statements (could only happen due to memory corruption)
+
+#define CONFIG_BC
+#include "..\common_test\CommonInit.ETpuCommand"
+wait_time(10);
+
+
+//=============================================================================
+
+// bad BC message types
+
+write_chan_data8(  TX_A, _CPBA8_MS1553__messageType_, 0);
+// send message
+write_chan_hsrr(TX_A, MS1553_BC_START_MESSAGE);
+wait_time(1);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, BC_INVALID_MESSAGE_TYPE_ERROR);
+
+write_chan_data8( TX_A, _CPBA8_MS1553__messageType_, 99);
+write_chan_data8( RX_A, _CPBA8_MS1553__messageStatusInterruptMask_, 0xff); // enable error interrupt
+// send message
+write_chan_hsrr(TX_A, MS1553_BC_START_MESSAGE);
+wait_time(1);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, BC_INVALID_MESSAGE_TYPE_ERROR);
+
+
+//=============================================================================
+
+// bad states for HandleWord()
+// 0 - below valid range
+// 50 - above valid range
+// unused : MS1553_STATE_MC_RBD_AWAITING_DATA, MS1553_STATE_MC_RD_AWAITING_DATA
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+wait_time(10);
+
+write_chan_data8(  TX_A, _CPBA8_MS1553__messageType_, BC_TO_RT_XFR);
+write_chan_data24( TX_A, _CPBA24_MS1553__cmdWord1_, 0x1221);
+write_chan_data24( TX_A, _CPBA24_MS1553__txWordCnt_, 1);
+write_global_data24(TX_DATA_BUFFER + 0x00, 0x815f);
+// send message
+write_chan_hsrr(TX_A, MS1553_BC_START_MESSAGE);
+BC_WORD_1
+BC_WORD_X
+IDLE 
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_0
+// inject bad state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, 0);
+INVALID_LONG_IDLE
+
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, INTERNAL_ERROR);
+
+///////////////////////////
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+wait_time(10);
+
+write_chan_data8(  TX_A, _CPBA8_MS1553__messageType_, BC_TO_RT_XFR);
+write_chan_data24( TX_A, _CPBA24_MS1553__cmdWord1_, 0x1221);
+write_chan_data24( TX_A, _CPBA24_MS1553__txWordCnt_, 1);
+write_global_data24(TX_DATA_BUFFER + 0x00, 0x815f);
+// send message
+write_chan_hsrr(TX_A, MS1553_BC_START_MESSAGE);
+BC_WORD_1
+BC_WORD_X
+IDLE 
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_0
+// inject bad state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, 50);
+INVALID_LONG_IDLE
+
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, INTERNAL_ERROR);
+
+///////////////////////////
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+wait_time(10);
+
+write_chan_data8(  TX_A, _CPBA8_MS1553__messageType_, BC_TO_RT_XFR);
+write_chan_data24( TX_A, _CPBA24_MS1553__cmdWord1_, 0x1221);
+write_chan_data24( TX_A, _CPBA24_MS1553__txWordCnt_, 1);
+write_global_data24(TX_DATA_BUFFER + 0x00, 0x815f);
+// send message
+write_chan_hsrr(TX_A, MS1553_BC_START_MESSAGE);
+BC_WORD_1
+BC_WORD_X
+IDLE 
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_0
+// inject bad state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, _CHAN_ENUM_LITERAL_MS1553_MS1553_STATES_MS1553_STATE_MC_RBD_AWAITING_DATA_);
+INVALID_LONG_IDLE
+
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, INTERNAL_ERROR);
+
+///////////////////////////
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+wait_time(10);
+
+write_chan_data8(  TX_A, _CPBA8_MS1553__messageType_, BC_TO_RT_XFR);
+write_chan_data24( TX_A, _CPBA24_MS1553__cmdWord1_, 0x1221);
+write_chan_data24( TX_A, _CPBA24_MS1553__txWordCnt_, 1);
+write_global_data24(TX_DATA_BUFFER + 0x00, 0x815f);
+// send message
+write_chan_hsrr(TX_A, MS1553_BC_START_MESSAGE);
+BC_WORD_1
+BC_WORD_X
+IDLE 
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_0
+// inject bad state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, _CHAN_ENUM_LITERAL_MS1553_MS1553_STATES_MS1553_STATE_MC_RD_AWAITING_DATA_);
+INVALID_LONG_IDLE
+
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, INTERNAL_ERROR);
+
+
+
+// bad states for FoundIdle()
+// 0 - below valid range
+// 50 - above valid range
+// unused : MS1553_STATE_MC_RBD_AWAITING_DATA, MS1553_STATE_MC_RD_AWAITING_DATA, MS1553_STATE_AWAIT_IDLE
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+wait_time(10);
+
+write_chan_data8(  TX_A, _CPBA8_MS1553__messageType_, BC_TO_RT_XFR);
+write_chan_data24( TX_A, _CPBA24_MS1553__cmdWord1_, 0x1221);
+write_chan_data24( TX_A, _CPBA24_MS1553__txWordCnt_, 1);
+write_global_data24(TX_DATA_BUFFER + 0x00, 0x815f);
+// send message
+write_chan_hsrr(TX_A, MS1553_BC_START_MESSAGE);
+BC_WORD_1
+BC_WORD_X
+wait_time(1);
+// inject bad state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, 0);
+INVALID_LONG_IDLE
+
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, INTERNAL_ERROR);
+
+///////////////////////////
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+wait_time(10);
+
+write_chan_data8(  TX_A, _CPBA8_MS1553__messageType_, BC_TO_RT_XFR);
+write_chan_data24( TX_A, _CPBA24_MS1553__cmdWord1_, 0x1221);
+write_chan_data24( TX_A, _CPBA24_MS1553__txWordCnt_, 1);
+write_global_data24(TX_DATA_BUFFER + 0x00, 0x815f);
+// send message
+write_chan_hsrr(TX_A, MS1553_BC_START_MESSAGE);
+BC_WORD_1
+BC_WORD_X
+wait_time(1);
+// inject bad state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, 50);
+INVALID_LONG_IDLE
+
+///////////////////////////
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+wait_time(10);
+
+write_chan_data8(  TX_A, _CPBA8_MS1553__messageType_, BC_TO_RT_XFR);
+write_chan_data24( TX_A, _CPBA24_MS1553__cmdWord1_, 0x1221);
+write_chan_data24( TX_A, _CPBA24_MS1553__txWordCnt_, 1);
+write_global_data24(TX_DATA_BUFFER + 0x00, 0x815f);
+// send message
+write_chan_hsrr(TX_A, MS1553_BC_START_MESSAGE);
+BC_WORD_1
+BC_WORD_X
+wait_time(1);
+// inject bad state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, _CHAN_ENUM_LITERAL_MS1553_MS1553_STATES_MS1553_STATE_MC_RBD_AWAITING_DATA_);
+INVALID_LONG_IDLE
+
+///////////////////////////
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+wait_time(10);
+
+write_chan_data8(  TX_A, _CPBA8_MS1553__messageType_, BC_TO_RT_XFR);
+write_chan_data24( TX_A, _CPBA24_MS1553__cmdWord1_, 0x1221);
+write_chan_data24( TX_A, _CPBA24_MS1553__txWordCnt_, 1);
+write_global_data24(TX_DATA_BUFFER + 0x00, 0x815f);
+// send message
+write_chan_hsrr(TX_A, MS1553_BC_START_MESSAGE);
+BC_WORD_1
+BC_WORD_X
+wait_time(1);
+// inject bad state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, _CHAN_ENUM_LITERAL_MS1553_MS1553_STATES_MS1553_STATE_MC_RD_AWAITING_DATA_);
+INVALID_LONG_IDLE
+
+///////////////////////////
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+wait_time(10);
+
+write_chan_data8(  TX_A, _CPBA8_MS1553__messageType_, BC_TO_RT_XFR);
+write_chan_data24( TX_A, _CPBA24_MS1553__cmdWord1_, 0x1221);
+write_chan_data24( TX_A, _CPBA24_MS1553__txWordCnt_, 1);
+write_global_data24(TX_DATA_BUFFER + 0x00, 0x815f);
+// send message
+write_chan_hsrr(TX_A, MS1553_BC_START_MESSAGE);
+BC_WORD_1
+BC_WORD_X
+wait_time(1);
+// inject bad state
+write_chan_data8(RX_A, _CPBA8_MS1553__state_, _CHAN_ENUM_LITERAL_MS1553_MS1553_STATES_MS1553_STATE_AWAIT_IDLE_);
+INVALID_LONG_IDLE
+
+
+//=============================================================================
+
+// test BC busy
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+wait_time(10);
+
+clear_chan_intr(TX_A);
+write_chan_data8(  TX_A, _CPBA8_MS1553__messageType_, BC_TO_RT_XFR);
+write_chan_data24( TX_A, _CPBA24_MS1553__cmdWord1_, 0x1221);
+write_chan_data24( TX_A, _CPBA24_MS1553__txWordCnt_, 1);
+write_global_data24(TX_DATA_BUFFER + 0x00, 0x815f);
+// send message
+write_chan_hsrr(TX_A, MS1553_BC_START_MESSAGE);
+BC_WORD_1
+BC_WORD_X
+IDLE 
+verify_chan_intr(TX_A, 0);
+write_chan_hsrr(TX_A, MS1553_BC_START_MESSAGE);
+wait_time(1);
+verify_chan_intr(TX_A, 1);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, BC_BUS_BUSY_ERROR);
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_0
+IDLE 
+// message complete, no error
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+
+
+//=============================================================================
+
+// test the seek idle feature
+
+RESET_RECEIVE_BUFFER
+RESET_MT_RECEIVE_BUFFER
+RESET_RT_RECEIVE_BUFFER
+wait_time(10);
+
+eTPU_B.write_chan_hsrr(RT_RX_A, MS1553_RX_SHUTDOWN_HSR);
+eTPU_B.write_chan_hsrr(RT_TX_A, MS1553_TX_SHUTDOWN_HSR);
+clear_chan_intr(RX_A);
+write_chan_data8( RX_A, _CPBA8_MS1553__messageStatus_, 0);
+write_chan_data24( RX_A, _CPBA24_MS1553__seekIdleTimeout_, TCR1S_PER_BIT * 20);
+// seek idle
+write_chan_hsrr(RX_A, MS1553_BC_SEEK_IDLE);
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_0
+IDLE 
+verify_chan_intr(RX_A, 0);
+verify_chan_data8(RX_A, _CPBA8_MS1553__messageStatus_, 0);
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_0
+verify_chan_intr(RX_A, 0);
+verify_chan_data8(RX_A, _CPBA8_MS1553__messageStatus_, 0);
+wait_time(19);
+verify_chan_intr(RX_A, 0);
+verify_chan_data8(RX_A, _CPBA8_MS1553__messageStatus_, 0);
+wait_time(2);
+verify_chan_intr(RX_A, 1);
+verify_chan_data8(RX_A, _CPBA8_MS1553__messageStatus_, BUS_IDLE_DETECTED);
+
+// diable the interrupt and run again
+write_chan_data8(RX_A, _CPBA8_MS1553__messageStatusInterruptMask_, 0);
+clear_chan_intr(RX_A);
+write_chan_data8( RX_A, _CPBA8_MS1553__messageStatus_, 0);
+// seek idle
+write_chan_hsrr(RX_A, MS1553_BC_SEEK_IDLE);
+wait_time(21);
+verify_chan_intr(RX_A, 0);
+verify_chan_data8(RX_A, _CPBA8_MS1553__messageStatus_, BUS_IDLE_DETECTED);
+
+
+//=============================================================================
+
+// infer entry coverage (TBD)
+
+// verify coverage
+
+verify_file_coverage_ex("etec_MS1553_BC_RX.c", 100, 100, 0);
+verify_file_coverage_ex("etec_MS1553_BC_TX.c", 100, 100, 0);
+write_coverage_file("BC_etpu_test\\BC.Coverage");
+save_cumulative_file_coverage("etec_MS1553_BC_RX.c", "BC_etpu_test\\BC_RX.TotalCoverageData");
+save_cumulative_file_coverage("etec_MS1553_BC_TX.c", "BC_etpu_test\\BC_TX.TotalCoverageData");
+
+//=============================================================================
+
+//=============================================================================
+//==========      That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+wait_time(5000);
+exit();
+#else
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_
+

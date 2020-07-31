@@ -1,0 +1,722 @@
+// Monitor Terminal test
+//
+// Test functional processing of all valid message types.
+
+#define CONFIG_MT
+#include "..\common_test\CommonInit.ETpuCommand"
+
+// Must be specified on the command line
+//vector("NoWaveform.Vector");
+
+// enable all message interrupts
+write_chan_data8( RX_A, _CPBA8_MS1553__messageStatusInterruptMask_, 0xff);
+
+//------------------------------------------------------------------------------
+// @@L1 Monitor Terminal (MT) Functional Tests
+//------------------------------------------------------------------------------
+
+
+//--------------------------------------------------------
+// @@L2 Test: Controller to RT 'Receive' Transfer
+// @@I 0x20000100
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d  Test a message from the controller to the Receiver RT
+// @@d  at address '4' with three data words.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x3   PARITY_0
+// Terminal4.data  (3X)
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+IDLE
+// Terminal4.status
+// RT=4    (4<<11)
+// Err=0   (0<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, BC_TO_RT_XFR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x10);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, BC_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x2223);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2223);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, INVALID_WORD);
+//verify_mem_u16(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0C, 0xffff, 0x2000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x2000);
+//verify_mem_u16(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0E, 0xffff, INVALID_WORD);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x10, 0xffffffff, 0);
+
+//--------------------------------------------------------
+// @@L2 Test: RT to Controller 'Transmit' Transfer
+// @@I  0x20000200
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d Test a message from Transmitter
+// @@d from RT at address '4' to the controller with three data words.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=3    (3<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x3   PARITY_1
+IDLE
+// Terminal4.status
+// RT=4    (4<<11)
+// Err=0   (0<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// Terminal4.data  (3X)
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x5 HEX_0xA HEX_0xF   PARITY_0
+DATA_SYNCH    HEX_0x3 HEX_0x9 HEX_0xA HEX_0x5   PARITY_1
+IDLE
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, RT_TO_BC_XFR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x10);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x2623);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2623);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, 0x2000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x2000);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x7B5F);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x25AF);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x39A5);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, INVALID_WORD);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x10, 0xffffffff, 0);
+
+// @@d  Test another message but with 4 Data words.
+
+wait_time(10);
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x4   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// Terminal4.data  (4X)
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x5 HEX_0xA HEX_0xF   PARITY_0
+DATA_SYNCH    HEX_0x3 HEX_0x9 HEX_0xA HEX_0x5   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x5 HEX_0xA HEX_0xF   PARITY_0
+IDLE
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x10, 0xff, RT_TO_BC_XFR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x11, 0xffffff, RX_DATA_BUFFER+0x20);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u16(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x14, 0xffff, 0x2624);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2624);
+//verify_mem_u16(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x16, 0xffff, 0x2000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x2000);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x7B5F);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x25AF);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x39A5);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, 0x25AF);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x10, 0xffff, INVALID_WORD);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x20, 0xffffffff, 0);
+
+// @@d  Test another message but with 1 Data word
+
+wait_time(10);
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_0
+IDLE
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+// Terminal4.data  (2X)
+DATA_SYNCH    HEX_0x7 HEX_0xB HEX_0x5 HEX_0xF   PARITY_1
+IDLE
+
+VERIFY_NO_ERRORS
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_BC_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2621);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x2000);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x7B5F);
+
+//--------------------------------------------------------
+// @@L2 Test: RT to RT Transfer
+// @@I 0x20000300
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d  Test RT-RT message with one data word.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4     (4<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=1    (1<<0)
+// @@d  First command word specifies the Receiver's RT address of '4'.
+CMD_SYNCH    HEX_0x2 HEX_0x2 HEX_0x2 HEX_0x1   PARITY_1
+// Master.Command(Terminal5)
+// RT=6     (6<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=1    (1<<0)
+// Terminal4.data  (3X)
+// @@d  Second command word specifies the Transmitter's RT address of '6'.
+CMD_SYNCH    HEX_0x3 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_1
+IDLE
+// Terminal5.status
+// RT=5    (5<<11)
+// Err=0   (0<<0)
+CMD_SYNCH     HEX_0x3 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_1
+// Now the data, ...
+DATA_SYNCH    HEX_0x1 HEX_0x1 HEX_0x1 HEX_0x1   PARITY_1
+IDLE
+// Terminal4.status
+// RT=4    (4<<11)
+// Err=0   (0<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, RT_TO_RT_XFR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x10);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x2221);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, 0x3621);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x2221);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x3621);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x10, 0xffff, 0x3000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x3000);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x1111);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, INVALID_WORD);
+//verify_mem_u16(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0C, 0xffff, 0x2000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord2_, 0x2000);
+//verify_mem_u16(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0E, 0xffff, INVALID_WORD);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x10, 0xffffffff, 0);
+
+//--------------------------------------------------------
+// @@L2 Test: Bus Controller to ALL RT's broadcast
+// @@I 0x20000700
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d Set the RT address to 0x1F to indicate Broadcast (to ALL Rt's.)
+// @@d Set the number of data words to four
+
+IDLE
+// Master.Command(all)
+// RT=0x1F     (0x1F<<11)   (broadcast)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=4    (4<<0)
+CMD_SYNCH    HEX_0xF HEX_0xA HEX_0x2 HEX_0x4   PARITY_1
+// @@d  TransmitSet the RT address to 0x1F to indicate Broadcat (to ALL Rt's.)
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+DATA_SYNCH    HEX_0x5 HEX_0x6 HEX_0x6 HEX_0x3   PARITY_1
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+DATA_SYNCH    HEX_0x9 HEX_0xC HEX_0xA HEX_0xF   PARITY_1
+IDLE
+
+// @@d  Note that in a broadcast message there is no Receiver RT Status response.
+//CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+//IDLE
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, BC_TO_RT_BROADCAST_XFR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x10);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, BC_TO_RT_BROADCAST_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0xFA24);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0xFA24);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, 0x9CAF);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x10, 0xffff, INVALID_WORD);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x10, 0xffffffff, 0);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD);
+
+// @@d After the idle, extend the idle a LONG, LONG TIME
+// @@d and verify that there is no timeout and that the message is still valid.
+INVALID_LONG_IDLE
+INVALID_LONG_IDLE
+INVALID_LONG_IDLE
+INVALID_LONG_IDLE
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, BC_TO_RT_BROADCAST_XFR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x10);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, BC_TO_RT_BROADCAST_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0xFA24);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0xFA24);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x815f);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, 0x5663);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x64f9);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, 0x9CAF);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x10, 0xffff, INVALID_WORD);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x10, 0xffffffff, 0);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD);
+
+// @@d  Test another broadcast message but with 1 Data word
+
+RESET_RECEIVE_BUFFER
+
+IDLE
+// Master.Command(all)
+// RT=0x1F     (0x1F<<11)   (broadcast)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=1    (1<<0)
+CMD_SYNCH    HEX_0xF HEX_0xA HEX_0x2 HEX_0x1   PARITY_1
+// @@d  TransmitSet the RT address to 0x1F to indicate Broadcat (to ALL Rt's.)
+DATA_SYNCH    HEX_0x6 HEX_0x4 HEX_0xF HEX_0x9   PARITY_0
+IDLE
+
+// @@d  Note that in a broadcast message there is no Receiver RT Status response.
+//CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+//IDLE
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, BC_TO_RT_BROADCAST_XFR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x10);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, BC_TO_RT_BROADCAST_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0xFA24);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0xFA21);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x64f9);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, INVALID_WORD);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD);
+
+
+//--------------------------------------------------------
+// @@L2 TEST: RT to ALL RT Broadcast
+// @@I 0x20000800
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d  Test a Broadcast from Transmitter RT address 2 to ALL RT's (address=0x1F.)
+// @@d  Set the number of data words to 1.
+
+IDLE
+// @@d Set the Receiver's RT address to 0x1F indicating a 'Broadcast.'
+// Master.Command(Terminal4)
+// RT=0x1F  (1F<<11)
+// R/T=0    (0<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=1    (1<<0)
+CMD_SYNCH    HEX_0xF HEX_0xA HEX_0x2 HEX_0x1   PARITY_1
+// Master.Command(Terminal5)
+// RT=6     (6<<11)
+// R/T=1    (1<<10)
+// LOC=0x11 (0x11<<5)
+// CNT=1    (1<<0)
+// Terminal4.data  (3X)
+CMD_SYNCH    HEX_0x3 HEX_0x6 HEX_0x2 HEX_0x1   PARITY_1
+IDLE
+// Terminal5.status
+// RT=5    (5<<11)
+// Err=0   (0<<0)
+CMD_SYNCH     HEX_0x3 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_1
+// Now the data, ...
+DATA_SYNCH    HEX_0x1 HEX_0x1 HEX_0x1 HEX_0x1   PARITY_1
+IDLE
+// @@d The message is sealed at the second IDLE (no Receiver RT status word.)
+
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, RT_TO_RT_BROADCAST_XFR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x0C);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_BROADCAST_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0xFA21);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, 0x3621);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0xFA21);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x3621);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x10, 0xffff, 0x3000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x3000);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x1111);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, INVALID_WORD);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0C, 0xffffffff, 0);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord2_, INVALID_WORD);
+
+// @@d After the second idle, extend the idle a LONG, LONG TIME
+// @@d and verify that there is no timeout and that the message is still valid.
+INVALID_LONG_IDLE
+INVALID_LONG_IDLE
+INVALID_LONG_IDLE
+INVALID_LONG_IDLE
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, RT_TO_RT_BROADCAST_XFR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x0C);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, RT_TO_RT_BROADCAST_XFR);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0xFA21);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, 0x3621);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0xFA21);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord2_, 0x3621);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x10, 0xffff, 0x3000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x3000);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x00, 0xffff, 0x1111);
+verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x04, 0xffff, INVALID_WORD);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0C, 0xffffffff, 0);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord2_, INVALID_WORD);
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Transmit Without Data
+// @@I  0x20000400
+
+// @@d  Generate a Mode Command by setting the Mode Code to 0x1F.
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4          (4<<11)
+// R/T=1         (1<<10)
+// SUB_ADDR=0x1F (0x1F<<5)  (Mode Code: 11111b)
+// MODE=2         (2<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x7 HEX_0xE HEX_0x2   PARITY_1
+IDLE
+// @@d  Receiver RT of the mode code returns a Status Word but no Data Words
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+wait_time(1);
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, MODE_XMT_WITHOUT_DATA);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x08);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, MODE_XMT_WITHOUT_DATA);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x27E2);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x27E2);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, 0x2000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x2000);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffffffff, 0);
+
+// @@d  Wait a bunch more time and verify that no timeout
+// @@d  (that could occur if this was not a Mode Command) occurs.
+INVALID_LONG_IDLE
+INVALID_LONG_IDLE
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, MODE_XMT_WITHOUT_DATA);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x08);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, MODE_XMT_WITHOUT_DATA);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x27E2);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x27E2);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, 0x2000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x2000);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffffffff, 0);
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Transmit With Data
+// @@I  0x20000500
+
+// @@d  Generate a Mode Command by setting the Mode Code to 0x1F.
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4          (4<<11)
+// R/T=1         (1<<10)
+// SUB_ADDR=0x1F (0x1F<<5)  (Mode Code: 11111b)
+// MODE=0x12     (0x12<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x7 HEX_0xF HEX_0x2   PARITY_0
+IDLE
+// @@d  Receiver RT of the mode code returns a Status Word and one Data Word
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+IDLE
+
+wait_time(1);
+
+VERIFY_NO_ERRORS
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, MODE_XMT_WITH_DATA);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x27F2);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x2000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxModeWord_, 0x815F);
+
+// @@d  Wait a bunch more time and verify that no timeout
+// @@d  (that could occur if this was not a Mode Command) occurs.
+INVALID_LONG_IDLE
+INVALID_LONG_IDLE
+
+VERIFY_NO_ERRORS
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, MODE_XMT_WITH_DATA);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x27F2);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x2000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxModeWord_, 0x815F);
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Receive With Data
+// @@I  0x20000600
+
+// @@d  Generate a Mode Command by setting the Mode Code to 0x1F.
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4          (4<<11)
+// R/T=0         (0<<10)
+// SUB_ADDR=0x1F (0x1F<<5)  (Mode Code: 11111b)
+// MODE=0x12     (0x12<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x3 HEX_0xF HEX_0x2   PARITY_1
+DATA_SYNCH    HEX_0x8 HEX_0x1 HEX_0x5 HEX_0xF   PARITY_1
+IDLE
+// @@d  Receiver RT of the mode code returns a Status Word and one Data Word
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+wait_time(1);
+
+VERIFY_NO_ERRORS
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, MODE_RCV_WITH_DATA);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x23F2);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxModeWord_, 0x815F);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x2000);
+
+// @@d  Wait a bunch more time and verify that no timeout
+// @@d  (that could occur if this was not a Mode Command) occurs.
+INVALID_LONG_IDLE
+INVALID_LONG_IDLE
+
+VERIFY_NO_ERRORS
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, MODE_RCV_WITH_DATA);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x23F2);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxModeWord_, 0x815F);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x2000);
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Broadcast Without Data
+// @@I  0x20000900
+
+// @@d  Generate a Mode Command by setting the Mode Code to 0x1F.
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+// Master.Command(Terminal4)
+// RT=1F          (0x1F<<11)
+// R/T=1         (1<<10)
+// SUB_ADDR=0x1F (0x1F<<5)  (Mode Code: 11111b)
+// MODE=2         (2<<0)
+CMD_SYNCH    HEX_0xF HEX_0xF HEX_0xE HEX_0x2   PARITY_1
+IDLE
+
+wait_time(1);
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, MODE_BROADCAST_WITHOUT_DATA);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x08);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, MODE_BROADCAST_WITHOUT_DATA);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0xFFE2);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0xFFE2);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, INVALID_WORD);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffffffff, 0);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxModeWord_, INVALID_WORD);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD);
+
+// @@d  Wait a bunch more time and verify that no timeout
+// @@d  (that could occur if this was not a Mode Command) occurs.
+INVALID_LONG_IDLE
+INVALID_LONG_IDLE
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, MODE_BROADCAST_WITHOUT_DATA);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x08);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, MODE_BROADCAST_WITHOUT_DATA);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0xFFE2);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0xFFE2);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, INVALID_WORD);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffffffff, 0);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxModeWord_, INVALID_WORD);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD);
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Broadcast With Data
+// @@I  0x20000A00
+
+// @@d  Generate a Mode Command by setting the Mode Code to 0x1F.
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+IDLE
+// Master.Command(Terminal4)
+// RT=1F         (0x1F<<11)
+// R/T=0         (<<10)
+// SUB_ADDR=0x1F (0x1F<<5)  (Mode Code: 11111b)
+// MODE=0x12     (0x12<<0)
+CMD_SYNCH    HEX_0xF HEX_0xB HEX_0xF HEX_0x2   PARITY_1
+DATA_SYNCH    HEX_0x2 HEX_0x2 HEX_0xE HEX_0x0   PARITY_0
+IDLE
+
+wait_time(1);
+
+VERIFY_NO_ERRORS
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, MODE_BROADCAST_WITH_DATA);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0xFBF2);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxModeWord_, 0x22E0);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD);
+
+// @@d  Wait a bunch more time and verify that no timeout
+// @@d  (that could occur if this was not a Mode Command) occurs.
+INVALID_LONG_IDLE
+INVALID_LONG_IDLE
+
+VERIFY_NO_ERRORS
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, MODE_BROADCAST_WITH_DATA);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0xFBF2);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxModeWord_, 0x22E0);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, INVALID_WORD);
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Using 'RT ADDRESS == 0x00'
+// @@I  0x20000410
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d  Generate a Mode Command by setting the Mode Code to 0x00.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=0x18       (0x18<<11)
+// R/T=1         (1<<10)
+// SUB_ADDR=0x1F (0x00<<5)  (Mode Code: 00000b)
+// MODE=9        (9<<0)
+CMD_SYNCH    HEX_0xC HEX_0x4 HEX_0x0 HEX_0x9   PARITY_0
+IDLE
+// @@d  Receiver RT of the mode code returns a Status Word but no Data Words
+CMD_SYNCH    HEX_0xC HEX_0x0 HEX_0x0 HEX_0x0   PARITY_1
+IDLE
+
+wait_time(1);
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, MODE_XMT_WITHOUT_DATA);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x08);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, MODE_XMT_WITHOUT_DATA);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0xC409);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0xC409);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, 0xC000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0xC000);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffffffff, 0);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxModeWord_, INVALID_WORD);
+
+// @@d  Wait a bunch more time and verify that no timeout
+// @@d  (that could occur if this was not a Mode Command) occurs.
+INVALID_LONG_IDLE
+INVALID_LONG_IDLE
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, MODE_XMT_WITHOUT_DATA);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x08);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, MODE_XMT_WITHOUT_DATA);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0xC409);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0xC409);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, 0xC000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0xC000);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffffffff, 0);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxModeWord_, INVALID_WORD);
+
+//--------------------------------------------------------
+// @@L2 TEST: Mode Command - Using 'RT ADDRESS == 0x1F'
+// @@I  0x20000420
+
+RESET_RECEIVE_BUFFER
+wait_time(10);
+
+// @@d  Generate a Mode Command by setting the Mode Code to 0x1F.
+
+IDLE
+// Master.Command(Terminal4)
+// RT=4          (4<<11)
+// R/T=1         (1<<10)
+// SUB_ADDR=0x1F (0x1F<<5)  (Mode Code: 11111b)
+// MODE=2         (2<<0)
+CMD_SYNCH    HEX_0x2 HEX_0x7 HEX_0xE HEX_0x2   PARITY_1
+IDLE
+// @@d  Receiver RT of the mode code returns a Status Word but no Data Words
+CMD_SYNCH    HEX_0x2 HEX_0x0 HEX_0x0 HEX_0x0   PARITY_0
+IDLE
+
+wait_time(1);
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, MODE_XMT_WITHOUT_DATA);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x08);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, MODE_XMT_WITHOUT_DATA);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x27E2);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x27E2);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, 0x2000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x2000);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffffffff, 0);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxModeWord_, INVALID_WORD);
+
+// @@d  Wait a bunch more time and verify that no timeout
+// @@d  (that could occur if this was not a Mode Command) occurs.
+INVALID_LONG_IDLE
+INVALID_LONG_IDLE
+
+VERIFY_NO_ERRORS
+//verify_mem_u8(ETPU_DATA_SPACE,  RX_DATA_BUFFER + 0x00, 0xff, MODE_XMT_WITHOUT_DATA);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x01, 0xffffff, RX_DATA_BUFFER+0x08);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__messageType_, MODE_XMT_WITHOUT_DATA);
+verify_chan_data8 ( RX_A, _CPBA8_MS1553__errorStatus_, NO_ERROR);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffff, 0x27E2);
+verify_chan_data24( RX_A, _CPBA24_MS1553__cmdWord1_, 0x27E2);
+//verify_mem_u24(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x0c, 0xffff, 0x2000);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxStatusWord1_, 0x2000);
+//verify_mem_u32(ETPU_DATA_SPACE, RX_DATA_BUFFER + 0x08, 0xffffffff, 0);
+verify_chan_data24( RX_A, _CPBA24_MS1553__rxModeWord_, INVALID_WORD);
+
+
+//--------------------------------------------------------
+
+save_cumulative_file_coverage("etec_MS1553_MT_RX.c", "MT_etpu_test\\MT_FunctionalTest.CoverageData");
+
+
+//--------------------------------------------------------
+//  That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+wait_time(300);
+exit();
+#else
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_

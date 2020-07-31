@@ -1,0 +1,103 @@
+// 1553 TR vector file
+
+// set base wave frequency to 10 MHz
+frequency 10
+
+// 1553 input signals (pin names)
+node RX_A	ch8.in
+node RX_B	ch9.in
+node Thread_A             ThreadsGroupA
+node Thread_B             ThreadsGroupB
+
+group RX_1553 RX_A RX_B
+
+state LL 00
+state LH 01
+state HL 10
+state HH 11
+
+wave RX_1553
+
+		//==========================
+		// TEST ALL 4-bit SEQUENCES
+		//==========================
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  0x1230  -->  Parity.1
+	(LL 50)1    (HL 15 LH 15)1
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // 1
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // 2
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    // 3
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 0
+	(HL 5 LH 5)1
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  0x4567  -->  Parity.1
+	(LL 50)1    (HL 15 LH 15)1
+		(LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 4
+		(LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // 5
+		(LH 5 HL 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // 6
+		(LH 5 HL 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    // 7
+	(HL 5 LH 5)1
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  0x89AB  -->  Parity.1
+	(LL 50)1    (HL 15 LH 15)1
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 8
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // 9
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    // B
+	(HL 5 LH 5)1
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  0xCDEF  -->  Parity.1
+	(LL 50)1    (HL 15 LH 15)1
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // C
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // D
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // E
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    // F
+	(HL 5 LH 5)1
+
+		//==========================
+		// TEST SOME RANDOM NUMBERS
+		//==========================
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  472B  -->  Parity.1
+	(LL 50)1    (HL 15 LH 15)1
+		(LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 4
+		(LH 5 HL 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    // 7
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // 2
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    // B
+	(HL 5 LH 5)1
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  EDD1  -->  Parity.1
+	(LL 50)1    (HL 15 LH 15)1
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // E
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // D
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // D
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // 1
+	(HL 5 LH 5)1
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  CF58  -->  Parity.0
+	(LL 50)1    (HL 15 LH 15)1
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // C
+		(HL 5 LH 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    // F
+		(LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // 5
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 8
+	(LH 5 HL 5)1
+
+	// -------------------------------------------------------
+	// Idle  -->  Cmd.Synch  -->  34A9  -->  Parity.0
+	(LL 50)1    (HL 15 LH 15)1
+		(LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (HL 5 LH 5)1    // 3
+		(LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    // 4
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    (LH 5 HL 5)1    // A
+		(HL 5 LH 5)1    (LH 5 HL 5)1    (LH 5 HL 5)1    (HL 5 LH 5)1    // 9
+	(LH 5 HL 5)1
+
+	// Idle
+	LL *
+end
