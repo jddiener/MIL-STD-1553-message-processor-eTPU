@@ -96,7 +96,6 @@ typedef int32_t int24_t;
 struct etpu_config_t{
   uint32_t mcr;
   uint32_t misc;
-  uint32_t scmoff;
   uint32_t ecr_a;
   uint32_t tbcr_a;
   uint32_t stacr_a;
@@ -105,6 +104,7 @@ struct etpu_config_t{
   uint32_t stacr_b;
   uint32_t wdtr_a;
   uint32_t wdtr_b;
+  uint32_t scmoff;
 };
 
 /*******************************************************************************

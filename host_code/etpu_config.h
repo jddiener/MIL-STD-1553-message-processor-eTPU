@@ -60,9 +60,6 @@ struct etpu_config_t my_etpu_config =
   /* etpu_config.misc */
   _MISC_VALUE_,
 
-  /* etpu_config.scmoff */
-  _SCM_OFF_OPCODE_,
-
   /* etpu_config.ecr_a */
   _ENTRY_TABLE_BASE_ADDR_	/* entry table base address = shifted FS_ETPU_ENTRY_TABLE */
   | FS_ETPU_CHAN_FILTER_3SAMPLE	/* channel filter mode = three-sample mode (CDFC=2) */
@@ -107,7 +104,18 @@ struct etpu_config_t my_etpu_config =
   | FS_ETPU_TCR1_STAC_DISABLE	/* TCR1 operation on STAC bus disabled (REN1=0) */
   | FS_ETPU_TCR2_STAC_DISABLE	/* TCR2 operation on STAC bus disabled (REN2=0) */
   | FS_ETPU_TCR1_STAC_SRVSLOT(0)	/* TCR1 resource server slot = 0 (SRV1=0) */
-  | FS_ETPU_TCR2_STAC_SRVSLOT(0)	/* TCR2 resource server slot = 0 (SRV2=0) */
+  | FS_ETPU_TCR2_STAC_SRVSLOT(0),	/* TCR2 resource server slot = 0 (SRV2=0) */
+
+  /* etpu_config.wdtr_a - Watchdog Timer Register A(eTPU2 only) */
+  FS_ETPU_WDM_DISABLED /* watchdog mode = disabled */
+  | FS_ETPU_WDTR_WDCNT(0), /* watchdog count = 0 */
+
+  /* etpu_config.wdtr_b - Watchdog Timer Register B (eTPU2 only) */
+  FS_ETPU_WDM_DISABLED /* watchdog mode = disabled */
+  | FS_ETPU_WDTR_WDCNT(0), /* watchdog count = 0 */
+
+  /* etpu_config.scmoff */
+  _SCM_OFF_OPCODE_,
 };
 
 #if defined(MPC5777C)
@@ -119,9 +127,6 @@ struct etpu_config_t my_etpu_c_config =
 
 	/* etpu_config.misc */
 	C_MISC_VALUE_,
-
-	/* etpu_config.scmoff */
-	C_SCM_OFF_OPCODE_,
 
 	/* etpu_config.ecr_a */
 	C_ENTRY_TABLE_BASE_ADDR_	/* entry table base address = shifted FS_ETPU_ENTRY_TABLE */
@@ -144,7 +149,18 @@ struct etpu_config_t my_etpu_c_config =
 	| FS_ETPU_TCR1_STAC_DISABLE	/* TCR1 operation on STAC bus disabled (REN1=0) */
 	| FS_ETPU_TCR2_STAC_DISABLE	/* TCR2 operation on STAC bus disabled (REN2=0) */
 	| FS_ETPU_TCR1_STAC_SRVSLOT(0)	/* TCR1 resource server slot = 0 (SRV1=0) */
-	| FS_ETPU_TCR2_STAC_SRVSLOT(0)	/* TCR2 resource server slot = 0 (SRV2=0) */,
+	| FS_ETPU_TCR2_STAC_SRVSLOT(0),	/* TCR2 resource server slot = 0 (SRV2=0) */,
+
+    /* etpu_config.wdtr_a - Watchdog Timer Register A(eTPU2 only) */
+    FS_ETPU_WDM_DISABLED /* watchdog mode = disabled */
+    | FS_ETPU_WDTR_WDCNT(0), /* watchdog count = 0 */
+
+    /* etpu_config.wdtr_b - Watchdog Timer Register B (eTPU2 only) */
+    FS_ETPU_WDM_DISABLED /* watchdog mode = disabled */
+    | FS_ETPU_WDTR_WDCNT(0), /* watchdog count = 0 */
+
+	/* etpu_config.scmoff */
+	C_SCM_OFF_OPCODE_,
 };
 #endif
 
