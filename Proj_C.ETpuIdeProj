@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<user creator="ASH WARE, Inc." version="2.72.2.0">
+  <build_script_define_etpu val="MPC5777C__0_C" />
+  <build_file name="zzz_1ETpuSim.MtDtBuild" in_build_script_dir="true" />
+  <etec_dir val="Version 2.62D" />
+  <source_code_search />
+  <!--=======================================================-->
+  <!--======    START TARGET-SPECIFIC SETTINGS        =======-->
+  <target name="eTPU_A">
+    <internal_build val="true" />
+    <link_file name="etpu_code\etpu_c_set.elf" lst_choice="0" mnemonic="C_" />
+    <source_file name="etpu_code\etec_MS1553_RX.c" tool="ETEC_CC" />
+    <source_file name="etpu_code\etec_MS1553_TX.c" tool="ETEC_CC" />
+    <source_file name="etpu_code\etec_MS1553_MT_RX.c" tool="ETEC_CC" />
+    <source_file name="etpu_code\etec_MS1553_RT_RX.c" tool="ETEC_CC" />
+    <source_file name="etpu_code\etec_MS1553_RT_TX.c" tool="ETEC_CC" />
+    <source_file name="etpu_code\etec_MS1553_BC_RX.c" tool="ETEC_CC" />
+    <source_file name="etpu_code\etec_MS1553_BC_TX.c" tool="ETEC_CC" />
+    <source_file name="etpu_code\Tester.c" tool="ETEC_CC" />
+  </target>
+  <!--======    END TARGET-SPECIFIC SETTINGS          =======-->
+  <!--=======================================================-->
+</user>

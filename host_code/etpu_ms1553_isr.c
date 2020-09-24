@@ -20,8 +20,9 @@
 
 typedef struct
 {
-    uint32_t chan_base_num;
-    ms1553_instance_t* instance;
+    ETPU_MODULE         module;
+    uint32_t            chan_base_num;
+    ms1553_instance_t*  instance;
 } ms1553_etpu_channel_instance_map_t;
 
 #define MAX_MS1553_INSTANCE 8
@@ -29,14 +30,15 @@ uint32_t g_ms1553_instance_count = 0;
 ms1553_etpu_channel_instance_map_t g_ms1553_etpu_channel_instance_map[MAX_MS1553_INSTANCE];
 
 
-ms1553_instance_t* etpu_ms1553_get_instance_from_channel(uint32_t etpu_channel)
+ms1553_instance_t* etpu_ms1553_get_instance_from_channel(ETPU_MODULE em, uint32_t etpu_channel)
 {
     uint32_t i;
     
     for (i = 0; i < g_ms1553_instance_count; i++)
     {
-        if (g_ms1553_etpu_channel_instance_map[i].chan_base_num == etpu_channel ||
-            g_ms1553_etpu_channel_instance_map[i].chan_base_num + 1 == etpu_channel)
+        if ((g_ms1553_etpu_channel_instance_map[i].chan_base_num == etpu_channel ||
+             g_ms1553_etpu_channel_instance_map[i].chan_base_num + 1 == etpu_channel) &&
+            g_ms1553_etpu_channel_instance_map[i].module == em)
             return g_ms1553_etpu_channel_instance_map[i].instance;
     }
     return 0;
@@ -45,6 +47,7 @@ ms1553_instance_t* etpu_ms1553_get_instance_from_channel(uint32_t etpu_channel)
 
 uint32_t etpu_ms1553_register_instance(
     ms1553_instance_t *p_ms1553_instance,
+    ETPU_MODULE em,
     uint32_t chan_base_num
     )
 {
@@ -53,7 +56,8 @@ uint32_t etpu_ms1553_register_instance(
     /* check if previously registered */
     for (i = 0; i < g_ms1553_instance_count; i++)
     {
-        if (g_ms1553_etpu_channel_instance_map[i].chan_base_num == chan_base_num)
+        if (g_ms1553_etpu_channel_instance_map[i].chan_base_num == chan_base_num &&
+            g_ms1553_etpu_channel_instance_map[i].module == em)
         {
             /* chan registered previously, but update instance */
             g_ms1553_etpu_channel_instance_map[i].instance = p_ms1553_instance;
@@ -64,6 +68,7 @@ uint32_t etpu_ms1553_register_instance(
     if (g_ms1553_instance_count >= MAX_MS1553_INSTANCE)
         return 1;
         
+    g_ms1553_etpu_channel_instance_map[g_ms1553_instance_count].module = em;
     g_ms1553_etpu_channel_instance_map[g_ms1553_instance_count].chan_base_num = chan_base_num;
     g_ms1553_etpu_channel_instance_map[g_ms1553_instance_count].instance = p_ms1553_instance;
     g_ms1553_instance_count++;
@@ -72,12 +77,13 @@ uint32_t etpu_ms1553_register_instance(
 
 
 uint32_t etpu_ms1553_ISR(
+    ETPU_MODULE em,
     uint32_t etpu_channel
     )
 {
     ms1553_instance_t* instance;
     
-    instance = etpu_ms1553_get_instance_from_channel(etpu_channel);
+    instance = etpu_ms1553_get_instance_from_channel(em, etpu_channel);
     if (!instance)
         return 1; 
 

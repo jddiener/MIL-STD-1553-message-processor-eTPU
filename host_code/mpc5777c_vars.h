@@ -10,6 +10,7 @@
 
 /* eTPU characteristics definition */
 volatile struct eTPU_struct * const eTPU = (struct eTPU_struct *)0xC3FC0000;
+volatile struct eTPU_struct * const eTPU_AB = (struct eTPU_struct *)0xC3FC0000;
 
 const uint32_t fs_etpu_code_start =     0xC3FD0000;
 const uint32_t fs_etpu_data_ram_start = 0xC3FC8000;

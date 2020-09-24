@@ -623,7 +623,7 @@ int user_main()
                     /* call handler */
                     g_bc_interrupt_active = 1;
                     /* note: if this was eTPU-B, we would need to add 64 to channel number */
-                    etpu_ms1553_ISR(i);
+                    etpu_ms1553_ISR(EM_AB, i);
                     g_bc_interrupt_active = 0;
                     bc_cisr &= (~isr_test_mask);
                     if (bc_cisr == 0) break;
@@ -688,7 +688,7 @@ int user_main()
                         /* call handler */
                         g_bc_interrupt_active = 1;
                         /* note: if this was eTPU-B, we would need to add 64 to channel number */
-                        etpu_ms1553_ISR(i);
+                        etpu_ms1553_ISR(EM_AB, i);
                         g_bc_interrupt_active = 0;
                         bc_cisr &= (~isr_test_mask);
                         if (bc_cisr == 0) break;
@@ -713,7 +713,7 @@ int user_main()
                         /* call handler */
                         g_rt_interrupt_active = 1;
                         /* note: if this was eTPU-B, we would need to add 64 to channel number */
-                        etpu_ms1553_ISR(i + 64);
+                        etpu_ms1553_ISR(EM_AB, i + 64);
                         g_rt_interrupt_active = 0;
                         rt_cisr &= (~isr_test_mask);
                         if (rt_cisr == 0) break;
@@ -738,7 +738,7 @@ int user_main()
                         /* call handler */
                         g_mt_interrupt_active = 1;
                         /* note: if this was eTPU-B, we would need to add 64 to channel number */
-                        etpu_ms1553_ISR(i + 64);
+                        etpu_ms1553_ISR(EM_AB, i + 64);
                         g_mt_interrupt_active = 0;
                         mt_cisr &= (~isr_test_mask);
                         if (mt_cisr == 0) break;

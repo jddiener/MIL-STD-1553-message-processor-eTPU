@@ -25,10 +25,12 @@ extern "C" {
 
 uint32_t etpu_ms1553_register_instance(
     ms1553_instance_t *p_ms1553_instance,
+    ETPU_MODULE em,
     uint32_t chan_base_num
     );
 
 uint32_t etpu_ms1553_ISR(
+    ETPU_MODULE em,
     uint32_t etpu_channel
     );
 

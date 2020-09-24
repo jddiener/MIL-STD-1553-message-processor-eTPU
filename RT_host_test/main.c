@@ -130,7 +130,7 @@ struct test_result g_mt_test_results[32] =
       { MESSAGE_ERROR,                             BC_TO_RT_XFR,                PARITY_ERROR, },
       { 0x2224, INVALID_WORD, INVALID_WORD, INVALID_WORD, INVALID_WORD, },
       { 0x815F, 0x5663, 0x64F9, INVALID_WORD, INVALID_WORD, INVALID_WORD, INVALID_WORD, INVALID_WORD, }, }, // test 15
-    { 0, 0, 0, 0, 0, 0, 1,
+    { 1, 0, 0, 0, 0, 0, 1,
       { MESSAGE_ERROR,                             BC_TO_RT_XFR,                TOO_FEW_DATA_WORDS_ERROR, },
       { 0x2225, INVALID_WORD, INVALID_WORD, INVALID_WORD, INVALID_WORD, },
       { 0x5663, INVALID_WORD, INVALID_WORD, INVALID_WORD, INVALID_WORD, INVALID_WORD, INVALID_WORD, INVALID_WORD, }, }, // test 16
@@ -382,7 +382,7 @@ int user_main()
                     /* call handler */
                     g_rt_interrupt_active = 1;
                     /* note: if this was eTPU-B, we would need to add 64 to channel number */
-                    etpu_ms1553_ISR(i);
+                    etpu_ms1553_ISR(EM_AB, i);
                     g_rt_interrupt_active = 0;
                     rt_cisr &= (~isr_test_mask);
                     if (rt_cisr == 0) break;
@@ -411,7 +411,7 @@ int user_main()
                     /* call handler */
                     g_mt_interrupt_active = 1;
                     /* note: if this was eTPU-B, we would need to add 64 to channel number */
-                    etpu_ms1553_ISR(i + 64);
+                    etpu_ms1553_ISR(EM_AB, i + 64);
                     g_mt_interrupt_active = 0;
                     mt_cisr &= (~isr_test_mask);
                     if (mt_cisr == 0) break;

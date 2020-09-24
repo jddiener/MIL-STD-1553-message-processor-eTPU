@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<user creator="ASH WARE, Inc." version="2.72.2.0">
+  <source_code_search />
+  <app_dimensions x="2102" y="182" w="2596" h="1489" />
+  <splitter name="projectBtmSplitter" distance="1038" total="1375" orientation="horizontal" />
+  <splitter name="projectRhtSplitter" parent="projectBtmSplitter" order="1" distance="370" total="2580" orientation="vertical" />
+  <splitter name="editSplitter" parent="projectRhtSplitter" order="2" distance="1116" total="2206" orientation="vertical" />
+  <splitter name="outputSplitter" parent="projectBtmSplitter" order="2" distance="1736" total="2580" orientation="vertical" />
+  <line_info_mgr />
+  <TabPage type="LogicAnalyzer" is_closed="true" ctrl="output1TabControl">
+    <ScopeSettings selected_channel="0" selected_cursor="0" auto_scroll="False" first_chan="0" width="125" />
+    <ScopeTimes>
+      <LeftSide word_a="0" word_b="0" word_c="0" />
+      <Width word_a="0" word_b="1862" word_c="2770894848" />
+      <LeftCursor word_a="0" word_b="465" word_c="2840207360" />
+      <RightCursor word_a="0" word_b="1396" word_c="4225654784" />
+    </ScopeTimes>
+    <ClocksTimeOptions />
+    <TimeDisplayOptions />
+    <ThreadGroups>
+      <eTPU_A index="0" group_a="1" group_b="2" group_c="4" group_d="8" group_e="16" group_f="32" group_g="64" group_h="128" />
+    </ThreadGroups>
+  </TabPage>
+  <TabPage type="Breakpoint" is_closed="true" ctrl="projectTabControl" />
+  <TabPage type="TraceBuf" is_closed="true" ctrl="output2TabControl">
+    <eTPU_A />
+  </TabPage>
+  <TabPage type="Watch" is_closed="true" ctrl="projectTabControl">
+    <Columns />
+    <SymbolList />
+  </TabPage>
+  <TabPage type="SettingsGrid" ctrl="edit2TabControl" sel="true" />
+  <TabPage type="Output" ctrl="output1TabControl" sel="true" focus="true" />
+  <TabPage type="Project" ctrl="projectTabControl" file="Proj_C.ETpuIdeProj" sel="true" />
+  <selected_project_node name="Link: etpu_c_set.elf" />
+  <!--Saved last-used directories-->
+  <last_dir type="InternalBuildExe" dir="etpu_code\" />
+  <search_dialog>
+    <directory val="C:\GIT\MIL-STD-1553-message-processor-eTPU\" />
+    <file_types val="*.c,*.h" />
+    <file_types val="*.ETpuCommand" />
+    <file_types val="*.Vector" />
+  </search_dialog>
+  <workshops enabled="True" active_index="0" />
+  <ide_is_setting />
+  <step_asm_multiple val="10" />
+  <step_angle_teeth_multiple val="3" />
+  <is_goto_abs_angle val="false" />
+  <goto_absolute_angle cycles="1" degrees="2" hundredths="3" />
+  <goto_delta_angle cycles="4" degrees="5" hundredths="6" />
+  <goto_absolute_time ks="0" sec="0" ms="2" us="250" ns="0" />
+  <goto_delta_time ks="0" sec="0" ms="0" us="10" ns="0" />
+  <is_goto_abs_time val="false" />
+  <goto_line_num val="10" />
+  <make_node target="eTPU_A" file="etpu_code\obj\etec_MS1553_RX.eao" time="5249050785837068375">
+    <dependent_file file="etpu_code\etec_MS1553_RX.c" time="5249013546457509196" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Std.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Hw.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Lib.h" time="5248989327127387904" />
+    <dependent_file file="etpu_code\etec_MS1553_common.h" time="5249013546457509196" />
+    <dependent_file file="etpu_code\etec_MS1553.h" time="5249013546457407302" />
+    <dependent_file file="Proj_C.ETpuIdeProj" time="5249050785834208815" />
+  </make_node>
+  <make_node target="eTPU_A" file="etpu_code\obj\etec_MS1553_TX.eao" time="5249050785840134301">
+    <dependent_file file="etpu_code\etec_MS1553_TX.c" time="5249013546457509196" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Std.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Hw.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Lib.h" time="5248989327127387904" />
+    <dependent_file file="etpu_code\etec_MS1553_common.h" time="5249013546457509196" />
+    <dependent_file file="etpu_code\etec_MS1553.h" time="5249013546457407302" />
+    <dependent_file file="Proj_C.ETpuIdeProj" time="5249050785834208815" />
+  </make_node>
+  <make_node target="eTPU_A" file="etpu_code\obj\etec_MS1553_MT_RX.eao" time="5249050785844044433">
+    <dependent_file file="etpu_code\etec_MS1553_MT_RX.c" time="5249013546457407302" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Std.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Hw.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Lib.h" time="5248989327127387904" />
+    <dependent_file file="etpu_code\etec_MS1553_common.h" time="5249013546457509196" />
+    <dependent_file file="etpu_code\etec_MS1553.h" time="5249013546457407302" />
+    <dependent_file file="Proj_C.ETpuIdeProj" time="5249050785834208815" />
+  </make_node>
+  <make_node target="eTPU_A" file="etpu_code\obj\etec_MS1553_RT_RX.eao" time="5249050785847986456">
+    <dependent_file file="etpu_code\etec_MS1553_RT_RX.c" time="5249013546457407302" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Std.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Hw.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Lib.h" time="5248989327127387904" />
+    <dependent_file file="etpu_code\etec_MS1553_common.h" time="5249013546457509196" />
+    <dependent_file file="etpu_code\etec_MS1553.h" time="5249013546457407302" />
+    <dependent_file file="Proj_C.ETpuIdeProj" time="5249050785834208815" />
+  </make_node>
+  <make_node target="eTPU_A" file="etpu_code\obj\etec_MS1553_RT_TX.eao" time="5249050785850874067">
+    <dependent_file file="etpu_code\etec_MS1553_RT_TX.c" time="5249013546457509196" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Std.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Hw.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Lib.h" time="5248989327127387904" />
+    <dependent_file file="etpu_code\etec_MS1553_common.h" time="5249013546457509196" />
+    <dependent_file file="etpu_code\etec_MS1553.h" time="5249013546457407302" />
+    <dependent_file file="Proj_C.ETpuIdeProj" time="5249050785834208815" />
+  </make_node>
+  <make_node target="eTPU_A" file="etpu_code\obj\etec_MS1553_BC_RX.eao" time="5249050785854353935">
+    <dependent_file file="etpu_code\etec_MS1553_BC_RX.c" time="5249013546457407302" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Std.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Hw.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Lib.h" time="5248989327127387904" />
+    <dependent_file file="etpu_code\etec_MS1553_common.h" time="5249013546457509196" />
+    <dependent_file file="etpu_code\etec_MS1553.h" time="5249013546457407302" />
+    <dependent_file file="Proj_C.ETpuIdeProj" time="5249050785834208815" />
+  </make_node>
+  <make_node target="eTPU_A" file="etpu_code\obj\etec_MS1553_BC_TX.eao" time="5249050785857428782">
+    <dependent_file file="etpu_code\etec_MS1553_BC_TX.c" time="5249013546457407302" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Std.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Hw.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Lib.h" time="5248989327127387904" />
+    <dependent_file file="etpu_code\etec_MS1553_common.h" time="5249013546457509196" />
+    <dependent_file file="etpu_code\etec_MS1553.h" time="5249013546457407302" />
+    <dependent_file file="Proj_C.ETpuIdeProj" time="5249050785834208815" />
+  </make_node>
+  <make_node target="eTPU_A" file="etpu_code\obj\Tester.eao" time="5249050785860227277">
+    <dependent_file file="etpu_code\Tester.c" time="5249013546457407302" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Std.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Hw.h" time="5248989327127387904" />
+    <dependent_file file="C:\Program Files (x86)\ASH WARE\eTPU Compiler V2_62D\Include\ETpu_Lib.h" time="5248989327127387904" />
+    <dependent_file file="etpu_code\etpu_tester_common.h" time="5249013546457509196" />
+    <dependent_file file="Proj_C.ETpuIdeProj" time="5249050785834208815" />
+  </make_node>
+  <!--=======================================================-->
+  <!--======    START TARGET-SPECIFIC SETTINGS        =======-->
+  <target name="eTPU_A" />
+  <!--======    END TARGET-SPECIFIC SETTINGS          =======-->
+  <!--=======================================================-->
+</user>

@@ -198,7 +198,7 @@ int user_main()
                     /* call handler */
                     g_mt_interrupt_active = 1;
                     /* note: if this was eTPU-B, we would need to add 64 to channel number */
-                    etpu_ms1553_ISR(i + 64);
+                    etpu_ms1553_ISR(EM_AB, i + 64);
                     g_mt_interrupt_active = 0;
                 }
             }

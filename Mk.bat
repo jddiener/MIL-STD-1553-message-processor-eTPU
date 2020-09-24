@@ -38,11 +38,14 @@ pushd etpu_code
 del *.elf *_defines.h *_idata.* *_scm.* *_struct.* *_ana.html *.map
 popd
 
-set BUILD_OPTIONS=-p=Proj.ETpuIdeProj -AutoBuild -IAcceptLicense -NoEnvFile -Minimize -lf5=Sim.Log -q
+set BUILD_OPTIONS=-AutoBuild -IAcceptLicense -NoEnvFile -Minimize -lf5=Sim.Log -q
 
 echo *************************
-echo Building the code
-%DEVTOOL% %BUILD_OPTIONS% "-tn=BUILD ETPU CODE"
+echo Building the code for module eTPU-AB
+%DEVTOOL% -p=Proj.ETpuIdeProj %BUILD_OPTIONS% "-tn=BUILD ETPU CODE for eTPU-AB"
+if  %ERRORLEVEL% NEQ 0 ( goto errors )
+echo Building the code for module eTPU-C
+%DEVTOOL% -p=Proj_C.ETpuIdeProj %BUILD_OPTIONS% "-tn=BUILD ETPU CODE for eTPU-C"
 if  %ERRORLEVEL% NEQ 0 ( goto errors )
 
 echo .

@@ -26,6 +26,7 @@ uint32_t etpu_ms1553_init(
     uint32_t *cpba;
     uint32_t tcr_freq;
     volatile struct eTPU_struct* p_eTPU;
+    uint32_t cpba_reg_val;
     
     /* test key config parameters for validity */
     if (p_ms1553_instance->terminal_type != MS1553_TT_MONITOR_TERMINAL && 
@@ -67,6 +68,7 @@ uint32_t etpu_ms1553_init(
     p_ms1553_instance->MS1553_etpu_access_8bit = (etpu_if_MS1553_CHANNEL_FRAME*)cpba;
     p_ms1553_instance->MS1553_etpu_access_24bit = 
       (etpu_if_MS1553_CHANNEL_FRAME_PSE*)(((uint32_t)cpba - fs_etpu_data_ram_start) + fs_etpu_data_ram_ext);
+    cpba_reg_val = ((uint32_t)cpba & 0x3fff) >> 3;
 
     /* clear entire channel frame */
     fs_memset32_ext((uint32_t*)cpba, 0, _FRAME_SIZE_MS1553_);
@@ -113,12 +115,12 @@ uint32_t etpu_ms1553_init(
         p_ms1553_instance->MS1553_etpu_access_8bit->_txBaseChan = FS_ETPU_LINK_ETPU_B(p_ms1553_instance->tx_chan_base_num);
 
     /* register this terminal with the interrupt handler */
-    if (etpu_ms1553_register_instance(p_ms1553_instance, p_ms1553_instance->rx_chan_base_num))
+    if (etpu_ms1553_register_instance(p_ms1553_instance, p_ms1553_instance->module, p_ms1553_instance->rx_chan_base_num))
         return FS_ETPU_ERROR_VALUE;
     if (p_ms1553_instance->terminal_type == MS1553_TT_BUS_CONTROLLER)
     {
         /* the bus controller needs its TX portion registered also, as it can generate an interrupt */
-        if (etpu_ms1553_register_instance(p_ms1553_instance, p_ms1553_instance->tx_chan_base_num))
+        if (etpu_ms1553_register_instance(p_ms1553_instance, p_ms1553_instance->module, p_ms1553_instance->tx_chan_base_num))
             return FS_ETPU_ERROR_VALUE;
     }
     
@@ -130,14 +132,14 @@ uint32_t etpu_ms1553_init(
     		(_ENTRY_TABLE_PIN_DIR_MS1553_MS1553_MT_RX_P_ << 25) +
     		(_ENTRY_TABLE_TYPE_MS1553_MS1553_MT_RX_P_ << 24) +
     		(_FUNCTION_NUM_MS1553_MS1553_MT_RX_P_ << 16) +
-    		((p_ms1553_instance->cpba - fs_etpu_data_ram_start) >> 3);
+    		cpba_reg_val;
     	p_eTPU->CHAN[p_ms1553_instance->rx_chan_base_num].SCR.R = 0; /* FM bits not used */
 	    /* negative RX chan */
     	p_eTPU->CHAN[p_ms1553_instance->rx_chan_base_num + 1].CR.R =
     		(_ENTRY_TABLE_PIN_DIR_MS1553_MS1553_MT_RX_N_ << 25) +
     		(_ENTRY_TABLE_TYPE_MS1553_MS1553_MT_RX_N_ << 24) +
     		(_FUNCTION_NUM_MS1553_MS1553_MT_RX_N_ << 16) +
-    		((p_ms1553_instance->cpba - fs_etpu_data_ram_start) >> 3);
+    		cpba_reg_val;
     	p_eTPU->CHAN[p_ms1553_instance->rx_chan_base_num + 1].SCR.R = 0; /* FM bits not used */
     }
     else if (p_ms1553_instance->terminal_type == MS1553_TT_REMOTE_TERMINAL)
@@ -147,28 +149,28 @@ uint32_t etpu_ms1553_init(
     		(_ENTRY_TABLE_PIN_DIR_MS1553_MS1553_RT_RX_P_ << 25) +
     		(_ENTRY_TABLE_TYPE_MS1553_MS1553_RT_RX_P_ << 24) +
     		(_FUNCTION_NUM_MS1553_MS1553_RT_RX_P_ << 16) +
-    		((p_ms1553_instance->cpba - fs_etpu_data_ram_start) >> 3);
+    		cpba_reg_val;
     	p_eTPU->CHAN[p_ms1553_instance->rx_chan_base_num].SCR.R = 0; /* FM bits not used */
 	    /* negative RX chan */
     	p_eTPU->CHAN[p_ms1553_instance->rx_chan_base_num + 1].CR.R =
     		(_ENTRY_TABLE_PIN_DIR_MS1553_MS1553_RT_RX_N_ << 25) +
     		(_ENTRY_TABLE_TYPE_MS1553_MS1553_RT_RX_N_ << 24) +
     		(_FUNCTION_NUM_MS1553_MS1553_RT_RX_N_ << 16) +
-    		((p_ms1553_instance->cpba - fs_etpu_data_ram_start) >> 3);
+    		cpba_reg_val;
     	p_eTPU->CHAN[p_ms1553_instance->rx_chan_base_num + 1].SCR.R = 0; /* FM bits not used */
 	    /* positive TX chan */
     	p_eTPU->CHAN[p_ms1553_instance->tx_chan_base_num].CR.R =
     		(_ENTRY_TABLE_PIN_DIR_MS1553_MS1553_RT_TX_ << 25) +
     		(_ENTRY_TABLE_TYPE_MS1553_MS1553_RT_TX_ << 24) +
     		(_FUNCTION_NUM_MS1553_MS1553_RT_TX_ << 16) +
-    		((p_ms1553_instance->cpba - fs_etpu_data_ram_start) >> 3);
+    		cpba_reg_val;
     	p_eTPU->CHAN[p_ms1553_instance->tx_chan_base_num].SCR.R = 0; /* FM bits not used */
 	    /* negative TX chan */
     	p_eTPU->CHAN[p_ms1553_instance->tx_chan_base_num + 1].CR.R =
     		(_ENTRY_TABLE_PIN_DIR_MS1553_MS1553_RT_TX_ << 25) +
     		(_ENTRY_TABLE_TYPE_MS1553_MS1553_RT_TX_ << 24) +
     		(_FUNCTION_NUM_MS1553_MS1553_RT_TX_ << 16) +
-    		((p_ms1553_instance->cpba - fs_etpu_data_ram_start) >> 3);
+    		cpba_reg_val;
     	p_eTPU->CHAN[p_ms1553_instance->tx_chan_base_num + 1].SCR.R = 0; /* FM bits not used */
     }
     else if (p_ms1553_instance->terminal_type == MS1553_TT_BUS_CONTROLLER)
@@ -178,28 +180,28 @@ uint32_t etpu_ms1553_init(
     		(_ENTRY_TABLE_PIN_DIR_MS1553_MS1553_BC_RX_P_ << 25) +
     		(_ENTRY_TABLE_TYPE_MS1553_MS1553_BC_RX_P_ << 24) +
     		(_FUNCTION_NUM_MS1553_MS1553_BC_RX_P_ << 16) +
-    		((p_ms1553_instance->cpba - fs_etpu_data_ram_start) >> 3);
+    		cpba_reg_val;
     	p_eTPU->CHAN[p_ms1553_instance->rx_chan_base_num].SCR.R = 0; /* FM bits not used */
 	    /* negative RX chan */
     	p_eTPU->CHAN[p_ms1553_instance->rx_chan_base_num + 1].CR.R =
     		(_ENTRY_TABLE_PIN_DIR_MS1553_MS1553_BC_RX_N_ << 25) +
     		(_ENTRY_TABLE_TYPE_MS1553_MS1553_BC_RX_N_ << 24) +
     		(_FUNCTION_NUM_MS1553_MS1553_BC_RX_N_ << 16) +
-    		((p_ms1553_instance->cpba - fs_etpu_data_ram_start) >> 3);
+    		cpba_reg_val;
     	p_eTPU->CHAN[p_ms1553_instance->rx_chan_base_num + 1].SCR.R = 0; /* FM bits not used */
 	    /* positive TX chan */
     	p_eTPU->CHAN[p_ms1553_instance->tx_chan_base_num].CR.R =
     		(_ENTRY_TABLE_PIN_DIR_MS1553_MS1553_BC_TX_ << 25) +
     		(_ENTRY_TABLE_TYPE_MS1553_MS1553_BC_TX_ << 24) +
     		(_FUNCTION_NUM_MS1553_MS1553_BC_TX_ << 16) +
-    		((p_ms1553_instance->cpba - fs_etpu_data_ram_start) >> 3);
+    		cpba_reg_val;
     	p_eTPU->CHAN[p_ms1553_instance->tx_chan_base_num].SCR.R = 0; /* FM bits not used */
 	    /* negative TX chan */
     	p_eTPU->CHAN[p_ms1553_instance->tx_chan_base_num + 1].CR.R =
     		(_ENTRY_TABLE_PIN_DIR_MS1553_MS1553_BC_TX_ << 25) +
     		(_ENTRY_TABLE_TYPE_MS1553_MS1553_BC_TX_ << 24) +
     		(_FUNCTION_NUM_MS1553_MS1553_BC_TX_ << 16) +
-    		((p_ms1553_instance->cpba - fs_etpu_data_ram_start) >> 3);
+    		cpba_reg_val;
     	p_eTPU->CHAN[p_ms1553_instance->tx_chan_base_num + 1].SCR.R = 0; /* FM bits not used */
     }
 
