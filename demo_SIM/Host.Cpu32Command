@@ -1,0 +1,23 @@
+// Primary script file  'Host.Cpu32Command'
+
+// Set the host clock to 2000 Mhz (.5 ns/clock -->5e5 FemtoSeconds/clock)
+set_clk_period(500000);
+
+// Set the eTPU clock to 128 Mhz (clk_period in femtoseconds)
+eTPU_A.set_clk_period(7812500); // 128 MHz
+eTPU_B.set_clk_period(7812500); // 128 MHz
+eTPU_C.set_clk_period(7812500); // 128 MHz
+
+
+/* all action done via host code */
+
+
+at_time(3000);
+
+verify_val_int("g_test_complete", "==", 1);
+
+#ifdef _ASH_WARE_AUTO_RUN_
+exit();
+#else
+print("All tests are done!!");
+#endif // _ASH_WARE_AUTO_RUN_

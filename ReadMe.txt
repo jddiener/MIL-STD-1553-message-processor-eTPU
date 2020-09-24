@@ -22,6 +22,8 @@ The main directory structure of the package is as follows:
 .\BC_etpu_test     - standalone eTPU simulation tests for BC eTPU driver software
 .\BC_host_test     - system simulation tests for BC driver software (eTPU and host API code)
 .\common_test      - simulation test artifacts common across multiple test areas
+.\demo_SIM         - contains a System DevTool demo that exercises all 3 terminal types
+                     on a simulated MPC5777C
 .\doc              - all documentation for the drivers
 .\etpu_code        - eTPU software and build output (auto-generated host API code)
 .\host_code        - host API code for the drivers

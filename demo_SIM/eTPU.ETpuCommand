@@ -1,0 +1,40 @@
+// Basic sim/hw test of all 3 terminal types
+// 
+
+// set up pin connections in this script file; rest of testing will be performed
+// in actual host code
+
+// eTPU A
+#define BC_RX_P      0
+#define BC_RX_N      1
+#define BC_TX_P      2
+#define BC_TX_N      3
+
+// eTPU B
+#define RT_RX_P      0
+#define RT_RX_N      1
+#define RT_TX_P      2
+#define RT_TX_N      3
+
+// eTPU C
+#define MT_RX_P      0
+#define MT_RX_N      1
+
+place_buffer_ex("eTPU_A", BC_TX_P + 32, "eTPU_B", RT_RX_P);
+place_buffer_ex("eTPU_A", BC_TX_N + 32, "eTPU_B", RT_RX_N);
+place_buffer_ex("eTPU_B", RT_TX_P + 32, "eTPU_A", BC_RX_P);
+place_buffer_ex("eTPU_B", RT_TX_N + 32, "eTPU_A", BC_RX_N);
+
+place_or_gate_ex("eTPU_B", RT_RX_P, "eTPU_A", BC_RX_P, "eTPU_C", MT_RX_P);
+place_or_gate_ex("eTPU_B", RT_RX_N, "eTPU_A", BC_RX_N, "eTPU_C", MT_RX_N);
+
+
+//--------------------------------------------------------
+//  That is all she wrote!!
+#ifdef _ASH_WARE_AUTO_RUN_
+// exit done from Host target script
+//wait_time(300);
+//exit();
+#else
+wait_time(3050);
+#endif // _ASH_WARE_AUTO_RUN_

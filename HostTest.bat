@@ -87,6 +87,22 @@ if  %ERRORLEVEL% NEQ 0 ( goto errors )
 
 echo .
 echo All MIL-STD-1553 System Tests Pass
+echo .
+
+
+echo ============================================================
+echo Running demo (simulation)
+echo ============================================================
+pushd demo_SIM
+del Sim.log
+%DEVTOOL% %DEVTOOL_OPTIONS% %1 %2 %3 %4
+popd
+
+
+echo .
+echo All MIL-STD-1553 System Demos Pass
+echo .
+
 
 goto end
 :errors

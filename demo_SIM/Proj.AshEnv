@@ -1,0 +1,359 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<user creator="ASH WARE, Inc." version="2.72.2.0">
+  <source_code_search />
+  <app_dimensions x="-8" y="-8" w="1936" h="1096" />
+  <splitter name="projectBtmSplitter" distance="633" total="982" orientation="horizontal" />
+  <splitter name="projectRhtSplitter" parent="projectBtmSplitter" order="1" distance="270" total="1920" orientation="vertical" />
+  <splitter name="editSplitter" parent="projectRhtSplitter" order="2" distance="827" total="1646" orientation="vertical" />
+  <splitter name="outputSplitter" parent="projectBtmSplitter" order="2" distance="1294" total="1920" orientation="vertical" />
+  <line_info_mgr />
+  <TabPage type="LogicAnalyzer" ctrl="output1TabControl" FloatingWindow="True" x="-8" y="-8" width="1936" height="1096">
+    <ScopeSettings selected_channel="4" selected_cursor="1" auto_scroll="True" first_chan="0" width="171" />
+    <ScopeTimes>
+      <LeftSide word_a="0" word_b="462" word_c="1929177027" />
+      <Width word_a="0" word_b="262" word_c="1158493137" />
+      <LeftCursor word_a="0" word_b="936" word_c="1977446019" />
+      <RightCursor word_a="0" word_b="986" word_c="2797247211" />
+    </ScopeTimes>
+    <ClocksTimeOptions />
+    <TimeDisplayOptions />
+    <ThreadGroups>
+      <Host index="0" group_a="0" group_b="0" group_c="0" group_d="0" group_e="0" group_f="0" group_g="0" group_h="0" />
+      <eTPU_A index="1" group_a="1" group_b="2" group_c="4" group_d="8" group_e="16" group_f="32" group_g="64" group_h="128" />
+      <eTPU_B index="2" group_a="1" group_b="2" group_c="4" group_d="8" group_e="16" group_f="32" group_g="64" group_h="128" />
+      <eTPU_C index="3" group_a="1" group_b="2" group_c="4" group_d="8" group_e="16" group_f="32" group_g="64" group_h="128" />
+    </ThreadGroups>
+    <ScopeChannels>
+      <ScopeChan index="0" name="_ch0.in" alias="BC_RX_P" target_index="1" height="31" chan_state_mask="255" />
+      <ScopeChan index="1" name="_ch1.in" alias="BC_RX_N" target_index="1" height="31" chan_state_mask="255" />
+      <ScopeChan index="2" name="_ch2.out" alias="BC_TX_P" target_index="1" height="31" chan_state_mask="255" />
+      <ScopeChan index="3" name="_ch3.out" alias="BC_TX_N" target_index="1" height="31" chan_state_mask="255" />
+      <ScopeChan index="4" name="g_bc_interrupt_active" target_index="0" height="51" is_discrete="True" sym_chan_hint="0" min_value="0" max_value="1" />
+      <ScopeChan index="5" name="g_rt_interrupt_active" target_index="0" height="51" is_discrete="True" sym_chan_hint="0" min_value="0" max_value="1" />
+      <ScopeChan index="6" name="g_mt_interrupt_active" target_index="0" height="52" is_discrete="True" sym_chan_hint="0" min_value="0" max_value="1" />
+      <ScopeChan index="7" name="g_test_number" target_index="0" height="59" is_discrete="True" sym_chan_hint="0" min_value="0" max_value="20" />
+      <ScopeChan index="8" name="_messageType" target_index="2" height="79" is_discrete="True" sym_chan_hint="0" sym_base_name="_MS1553_AW613E__messageType_" min_value="0" max_value="10" gridlines="false" horz_cursors="false" />
+      <ScopeChan index="9" name="_ch0.in" alias="MT_P" target_index="3" height="31" chan_state_mask="255" />
+      <ScopeChan index="10" name="_ch1.in" alias="MT_N" target_index="3" height="31" chan_state_mask="255" />
+      <ScopeChan index="11" name="_ThreadsIdle" alias="_ThreadsIdle_A" target_index="1" height="31" />
+      <ScopeChan index="12" name="_ThreadsIdle" alias="_ThreadsIdle_B" target_index="2" height="31" />
+      <ScopeChan index="13" name="_ThreadsIdle" alias="_ThreadsIdle_C" target_index="3" height="31" />
+      <ScopeChan index="14" name="_ch0.in" alias="RT_RX_P" target_index="2" height="31" chan_state_mask="255" />
+      <ScopeChan index="15" name="_ch1.in" alias="RT_RX_N" target_index="2" height="31" chan_state_mask="255" />
+      <ScopeChan index="16" name="_ch2.out" alias="RT_TX_P" target_index="2" height="31" chan_state_mask="255" />
+      <ScopeChan index="17" name="_ch3.out" alias="RT_TX_N" target_index="2" height="31" chan_state_mask="255" />
+      <ScopeChan index="18" name="_state" target_index="2" height="77" is_discrete="True" sym_chan_hint="0" sym_base_name="_MS1553_AW613E__state_" min_value="0" max_value="30" />
+      <ScopeChan index="-1" name="_ch10.in" alias="BC_P" target_index="1" height="0" chan_state_mask="255" />
+      <ScopeChan index="-1" name="_ch11.in" alias="BC_N" target_index="1" height="0" chan_state_mask="255" />
+    </ScopeChannels>
+  </TabPage>
+  <TabPage type="Breakpoint" is_closed="true" ctrl="projectTabControl" />
+  <TabPage type="TraceBuf" is_closed="true" ctrl="output2TabControl">
+    <Host />
+    <eTPU_A />
+    <eTPU_B />
+    <eTPU_C />
+  </TabPage>
+  <TabPage type="Source" ctrl="edit1TabControl" file="main.c" top_line="258" sel="true" start_pos="9086" len="0" sel_text="" />
+  <TabPage type="Source" ctrl="edit1TabControl" file="test_data.c" top_line="154" start_pos="13413" len="0" sel_text="" />
+  <TabPage type="Script" ctrl="edit1TabControl" file="Host.Cpu32Command" top_line="0" start_pos="385" len="0" sel_text="" />
+  <TabPage type="Script" ctrl="edit1TabControl" file="eTPU.ETpuCommand" top_line="0" start_pos="979" len="0" sel_text="" />
+  <TabPage type="Text" ctrl="edit2TabControl" file="ReadMe.txt" top_line="0" sel="true" start_pos="507" len="0" sel_text="" />
+  <TabPage type="Output" ctrl="output1TabControl" sel="true" />
+  <TabPage type="LocalVariable" ctrl="output1TabControl" target="0">
+    <Columns width_1="425" width_2="240" />
+  </TabPage>
+  <TabPage type="RegisterWindow" ctrl="output1TabControl" target_tag="eTpu" win_type="FTWT_HOST_INTERFACE" target="eTPU_A" top_line="0" />
+  <TabPage type="Watch" ctrl="output2TabControl">
+    <Columns width_1="407" />
+    <SymbolList>
+      <Symbol name="g_ms1553_etpu_channel_instance_map" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_mt_interrupt_active" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_mt_data" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_test_number" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_mt_test_results" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_rt_interrupt_active" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_mt_command_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_mt_mode_data_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_mt_data_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_mt_status_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_mt_message_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_mt_tx_inhibited_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_mt_error_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_rt_command_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_rt_mode_data_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_rt_data_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_rt_status_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_rt_message_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_rt_tx_inhibited_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_rt_error_isr_cnt" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_bc_interrupt_active" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_bc_test_results" target="0" display_mode="GSDT_hex" script="False" />
+      <Symbol name="g_bc_data" target="0" script="False" />
+    </SymbolList>
+  </TabPage>
+  <TabPage type="MemoryWindow" ctrl="output2TabControl" sel="true" focus="true" target="eTPU_A" fc="5" bpd="4" bpa="1" box="0" row="0" addr="0" nib="0" cfr="4" />
+  <TabPage type="ChannelFrame" ctrl="output2TabControl" target="2" channel="0">
+    <Columns width_1="240" width_2="241" width_3="225" />
+  </TabPage>
+  <TabPage type="ChannelFrame" ctrl="output2TabControl" target="2" channel="8">
+    <Columns width_1="247" width_2="234" />
+  </TabPage>
+  <TabPage type="RegisterWindow" ctrl="output2TabControl" target_tag="eTpu" win_type="FTWT_HOST_INTERFACE" target="eTPU_A" top_line="0" />
+  <TabPage type="MemoryWindow" ctrl="output2TabControl" target="eTPU_C" fc="3" bpd="4" bpa="1" box="0" row="0" addr="0" nib="0" cfr="4" />
+  <TabPage type="RegisterWindow" ctrl="output2TabControl" target_tag="eTpu" win_type="FTWT_HOST_INTERFACE" target="eTPU_C" top_line="0" />
+  <TabPage type="Project" ctrl="projectTabControl" file="Proj.FullSysIdeProj" sel="true" />
+  <TabPage type="RegisterWindow" ctrl="projectTabControl" target_tag="eTpu" win_type="FTWT_REGISTER" target="eTPU_B" top_line="0" />
+  <selected_project_node name="eTPU.ETpuCommand" />
+  <!--Saved last-used directories-->
+  <last_dir type="ExternalBuildExe" dir="..\etpu_code\" />
+  <search_dialog case="true" include="true" scripts="true">
+    <find val="TBD" />
+    <find val="Initial" />
+    <find val="MS1553_BC_SEEK_IDLE" />
+    <find val="TOO_FEW_DATA_WORDS_ERROR" />
+    <find val="etpu_ms1553_register_instance" />
+    <find val="_initIdleTimeout" />
+    <find val="etpu_init" />
+    <find val="_messageType" />
+    <find val="_txBuffer" />
+    <find val="_txBufPtr" />
+    <find val="MESSAGE_STATUS_VALID" />
+    <find val="MS1553_STATE_BC_TO_RT_AWAITING_IDLE_A" />
+    <find val="MessageComplete_MT" />
+    <find val="MS1553_STATE_RT_TO_BC_AWAITING_IDLE_B" />
+    <find val="MESSAGE_DATA_VALID" />
+    <find val="etpu_config_t" />
+    <find val="fs_etpu_interrupt_enable_ext" />
+    <find val="fs_etpu_enable_ext" />
+    <find val="etpu_a_tcr1_freq" />
+    <replace val="Initial" />
+    <replace val="MS1553_BC_SEEK_IDLE" />
+    <replace val="TOO_FEW_DATA_WORDS_ERROR" />
+    <replace val="etpu_ms1553_register_instance" />
+    <replace val="_initIdleTimeout" />
+    <replace val="etpu_init" />
+    <replace val="_messageType" />
+    <replace val="_txBuffer" />
+    <replace val="_txBufPtr" />
+    <replace val="MESSAGE_STATUS_VALID" />
+    <replace val="MS1553_STATE_BC_TO_RT_AWAITING_IDLE_A" />
+    <replace val="MessageComplete_MT" />
+    <replace val="MS1553_STATE_RT_TO_BC_AWAITING_IDLE_B" />
+    <replace val="MESSAGE_DATA_VALID" />
+    <replace val="etpu_config_t" />
+    <replace val="fs_etpu_interrupt_enable_ext" />
+    <replace val="fs_etpu_enable_ext" />
+    <replace val="etpu_a_tcr1_freq" />
+    <directory val="C:\GIT\MIL-STD-1553-message-processor-eTPU\demo_SIM\" />
+    <directory val="C:\GIT\MIL-STD-1553-message-processor-eTPU\hardware_example\" />
+    <directory val="C:\GIT\ASHWARE\Tests\Drivers\MilStd1553\BC_host_test\" />
+    <directory val="C:\ASHWARE\GIT\ASHWARE\Tests\Drivers\MilStd1553\RT_host_test\" />
+    <directory val="C:\GIT\ASHWARE\Tests\Drivers\MilStd1553\RT_host_test\" />
+    <directory val="C:\GIT\ASHWARE\Tests\Drivers\MilStd1553\MT_host_test\" />
+    <file_types val="*.c,*.h" />
+    <file_types val="*.ETpuCommand" />
+    <file_types val="*.Vector" />
+  </search_dialog>
+  <workshops enabled="True" active_index="1" />
+  <ide_is_setting>
+    <ETPU_ALERT_ON_OUTPUT_PIN_EVENT val="False" />
+  </ide_is_setting>
+  <step_asm_multiple val="10" />
+  <step_angle_teeth_multiple val="3" />
+  <is_goto_abs_angle val="false" />
+  <goto_absolute_angle cycles="1" degrees="2" hundredths="3" />
+  <goto_delta_angle cycles="4" degrees="5" hundredths="6" />
+  <goto_absolute_time ks="0" sec="0" ms="2" us="250" ns="0" />
+  <goto_delta_time ks="0" sec="0" ms="0" us="10" ns="0" />
+  <is_goto_abs_time val="false" />
+  <goto_line_num val="10" />
+  <mem_win_get_addr val="48" />
+  <make_node target="Host" file="obj\etpu_util_ext.o" time="5249051607472754899">
+    <dependent_file file="..\host_code\etpu_util_ext.c" time="5249013546457607209" />
+    <dependent_file file="..\host_code\etpu_util_ext.h" time="5249025984380760181" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_struct.h" time="5249013546457607209" />
+    <dependent_file file="Proj.FullSysIdeProj" time="5249051606582792466" />
+  </make_node>
+  <make_node target="Host" file="obj\etpu_init.o" time="5249051610883516788">
+    <dependent_file file="..\host_code\etpu_init.c" time="5249051032123932107" />
+    <dependent_file file="..\host_code\etpu_util_ext.h" time="5249025984380760181" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_struct.h" time="5249013546457607209" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_defines.h" time="5249051609163650536" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_scm.c" time="5249051609163710377" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_scm.h" time="5249051609163710377" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_idata.c" time="5249051609163580729" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_idata.h" time="5249051609163580729" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_idata.h" time="5249051609163580729" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_idata.h" time="5249051609163580729" />
+    <dependent_file file="..\etpu_code\etpu_c_set_defines.h" time="5249051609260111556" />
+    <dependent_file file="..\etpu_code\etpu_c_set_scm.c" time="5249051609260161423" />
+    <dependent_file file="..\etpu_code\etpu_c_set_scm.h" time="5249051609260161423" />
+    <dependent_file file="..\etpu_code\etpu_c_set_idata.c" time="5249051609260041321" />
+    <dependent_file file="..\etpu_code\etpu_c_set_idata.h" time="5249051609260041321" />
+    <dependent_file file="..\etpu_code\etpu_c_set_idata.h" time="5249051609260041321" />
+    <dependent_file file="..\etpu_code\etpu_c_set_idata.h" time="5249051609260041321" />
+    <dependent_file file="..\host_code\etpu_config.h" time="5249051036563901978" />
+    <dependent_file file="..\host_code\mpc5777c_vars.h" time="5249050802941666769" />
+    <dependent_file file="..\host_code\mpc5777c_vars_c.h" time="5249013546457808908" />
+    <dependent_file file="Proj.FullSysIdeProj" time="5249051606582792466" />
+  </make_node>
+  <make_node target="Host" file="obj\etpu_ms1553_isr.o" time="5249051610887474640">
+    <dependent_file file="..\host_code\etpu_ms1553_isr.c" time="5249050959992916679" />
+    <dependent_file file="..\host_code\etpu_ms1553.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_util_ext.h" time="5249025984380760181" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_struct.h" time="5249013546457607209" />
+    <dependent_file file="..\host_code\etpu_auto_api.h" time="5249013546457509196" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_defines.h" time="5249051609163650536" />
+    <dependent_file file="..\etpu_code\etpu_c_set_defines.h" time="5249051609260111556" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_struct.h" time="5249051609163660511" />
+    <dependent_file file="..\etpu_code\etpu_c_set_struct.h" time="5249051609260121115" />
+    <dependent_file file="..\etpu_code\etec_ms1553_common.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\etpu_ms1553_mt.h" time="5249013546457607209" />
+    <dependent_file file="..\host_code\etpu_ms1553.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\etpu_ms1553_isr.h" time="5249050959992996473" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="Proj.FullSysIdeProj" time="5249051606582792466" />
+  </make_node>
+  <make_node target="Host" file="obj\etpu_ms1553.o" time="5249051610891477280">
+    <dependent_file file="..\host_code\etpu_ms1553.c" time="5249050960867716877" />
+    <dependent_file file="..\host_code\etpu_ms1553.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_util_ext.h" time="5249025984380760181" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_struct.h" time="5249013546457607209" />
+    <dependent_file file="..\host_code\etpu_auto_api.h" time="5249013546457509196" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_defines.h" time="5249051609163650536" />
+    <dependent_file file="..\etpu_code\etpu_c_set_defines.h" time="5249051609260111556" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_struct.h" time="5249051609163660511" />
+    <dependent_file file="..\etpu_code\etpu_c_set_struct.h" time="5249051609260121115" />
+    <dependent_file file="..\etpu_code\etec_ms1553_common.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\etpu_ms1553_isr.h" time="5249050959992996473" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="Proj.FullSysIdeProj" time="5249051606582792466" />
+  </make_node>
+  <make_node target="Host" file="obj\etpu_ms1553_mt.o" time="5249051610895379364">
+    <dependent_file file="..\host_code\etpu_ms1553_mt.c" time="5249013546457607209" />
+    <dependent_file file="..\host_code\etpu_ms1553_mt.h" time="5249013546457607209" />
+    <dependent_file file="..\host_code\etpu_ms1553.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_util_ext.h" time="5249025984380760181" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_struct.h" time="5249013546457607209" />
+    <dependent_file file="..\host_code\etpu_auto_api.h" time="5249013546457509196" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_defines.h" time="5249051609163650536" />
+    <dependent_file file="..\etpu_code\etpu_c_set_defines.h" time="5249051609260111556" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_struct.h" time="5249051609163660511" />
+    <dependent_file file="..\etpu_code\etpu_c_set_struct.h" time="5249051609260121115" />
+    <dependent_file file="..\etpu_code\etec_ms1553_common.h" time="5249013546457509196" />
+    <dependent_file file="Proj.FullSysIdeProj" time="5249051606582792466" />
+  </make_node>
+  <make_node target="Host" file="obj\etpu_ms1553_rt.o" time="5249051610899140568">
+    <dependent_file file="..\host_code\etpu_ms1553_rt.c" time="5249013546457607209" />
+    <dependent_file file="..\host_code\etpu_ms1553_rt.h" time="5249013546457607209" />
+    <dependent_file file="..\host_code\etpu_ms1553.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_util_ext.h" time="5249025984380760181" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_struct.h" time="5249013546457607209" />
+    <dependent_file file="..\host_code\etpu_auto_api.h" time="5249013546457509196" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_defines.h" time="5249051609163650536" />
+    <dependent_file file="..\etpu_code\etpu_c_set_defines.h" time="5249051609260111556" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_struct.h" time="5249051609163660511" />
+    <dependent_file file="..\etpu_code\etpu_c_set_struct.h" time="5249051609260121115" />
+    <dependent_file file="..\etpu_code\etec_ms1553_common.h" time="5249013546457509196" />
+    <dependent_file file="Proj.FullSysIdeProj" time="5249051606582792466" />
+  </make_node>
+  <make_node target="Host" file="obj\etpu_ms1553_bc.o" time="5249051610902958644">
+    <dependent_file file="..\host_code\etpu_ms1553_bc.c" time="5249013546457509196" />
+    <dependent_file file="..\host_code\etpu_ms1553_bc.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\etpu_ms1553.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_util_ext.h" time="5249025984380760181" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_struct.h" time="5249013546457607209" />
+    <dependent_file file="..\host_code\etpu_auto_api.h" time="5249013546457509196" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_defines.h" time="5249051609163650536" />
+    <dependent_file file="..\etpu_code\etpu_c_set_defines.h" time="5249051609260111556" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_struct.h" time="5249051609163660511" />
+    <dependent_file file="..\etpu_code\etpu_c_set_struct.h" time="5249051609260121115" />
+    <dependent_file file="..\etpu_code\etec_ms1553_common.h" time="5249013546457509196" />
+    <dependent_file file="Proj.FullSysIdeProj" time="5249051606582792466" />
+  </make_node>
+  <make_node target="Host" file="obj\main.o" time="5249051665473308932">
+    <dependent_file file="main.c" time="5249051664930506158" />
+    <dependent_file file="..\..\ASHWARE\Builds\Include\isrLib.h" time="5248851424849560878" />
+    <dependent_file file="..\..\ASHWARE\Builds\Include\scriptLib.h" time="5248851424849590795" />
+    <dependent_file file="..\host_code\etpu_init.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_util_ext.h" time="5249025984380760181" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_struct.h" time="5249013546457607209" />
+    <dependent_file file="..\host_code\etpu_ms1553.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_util_ext.h" time="5249025984380760181" />
+    <dependent_file file="..\host_code\etpu_auto_api.h" time="5249013546457509196" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_defines.h" time="5249051609163650536" />
+    <dependent_file file="..\etpu_code\etpu_c_set_defines.h" time="5249051609260111556" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_struct.h" time="5249051609163660511" />
+    <dependent_file file="..\etpu_code\etpu_c_set_struct.h" time="5249051609260121115" />
+    <dependent_file file="..\etpu_code\etec_ms1553_common.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\etpu_ms1553_rt.h" time="5249013546457607209" />
+    <dependent_file file="..\host_code\etpu_ms1553.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\etpu_ms1553_bc.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\etpu_ms1553.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\etpu_ms1553_isr.h" time="5249050959992996473" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="test_data.h" time="5249051607456195429" />
+    <dependent_file file="..\host_code\etpu_ms1553.h" time="5249013546457509196" />
+    <dependent_file file="Proj.FullSysIdeProj" time="5249051606582792466" />
+  </make_node>
+  <make_node target="Host" file="obj\test_data.o" time="5249051665477727041">
+    <dependent_file file="test_data.c" time="5249051665468574534" />
+    <dependent_file file="test_data.h" time="5249051607456195429" />
+    <dependent_file file="..\host_code\etpu_ms1553.h" time="5249013546457509196" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_util_ext.h" time="5249025984380760181" />
+    <dependent_file file="..\host_code\typedefs.h" time="5249013546457808908" />
+    <dependent_file file="..\host_code\etpu_struct.h" time="5249013546457607209" />
+    <dependent_file file="..\host_code\etpu_auto_api.h" time="5249013546457509196" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_defines.h" time="5249051609163650536" />
+    <dependent_file file="..\etpu_code\etpu_c_set_defines.h" time="5249051609260111556" />
+    <dependent_file file="..\etpu_code\etpu_ab_set_struct.h" time="5249051609163660511" />
+    <dependent_file file="..\etpu_code\etpu_c_set_struct.h" time="5249051609260121115" />
+    <dependent_file file="..\etpu_code\etec_ms1553_common.h" time="5249013546457509196" />
+    <dependent_file file="Proj.FullSysIdeProj" time="5249051606582792466" />
+  </make_node>
+  <make_node target="Host" file="Host.Cpu32Command" time="5249051665949190900">
+    <dependent_file file="Host.Cpu32Command" time="5249051665949190900" />
+  </make_node>
+  <make_node target="eTPU_A" file="eTPU.ETpuCommand" time="5249051665949213577">
+    <dependent_file file="eTPU.ETpuCommand" time="5249051665949213577" />
+  </make_node>
+  <source_file name="..\host_code\etpu_ms1553_isr.h" tool="None" />
+  <source_file name="..\host_code\etpu_ms1553.h" tool="None" />
+  <!--=======================================================-->
+  <!--======    START TARGET-SPECIFIC SETTINGS        =======-->
+  <target name="Host" />
+  <!--======    END TARGET-SPECIFIC SETTINGS          =======-->
+  <!--=======================================================-->
+  <!--=======================================================-->
+  <!--======    START TARGET-SPECIFIC SETTINGS        =======-->
+  <target name="eTPU_A" />
+  <!--======    END TARGET-SPECIFIC SETTINGS          =======-->
+  <!--=======================================================-->
+  <!--=======================================================-->
+  <!--======    START TARGET-SPECIFIC SETTINGS        =======-->
+  <target name="eTPU_B" />
+  <!--======    END TARGET-SPECIFIC SETTINGS          =======-->
+  <!--=======================================================-->
+  <!--=======================================================-->
+  <!--======    START TARGET-SPECIFIC SETTINGS        =======-->
+  <target name="eTPU_C" />
+  <!--======    END TARGET-SPECIFIC SETTINGS          =======-->
+  <!--=======================================================-->
+</user>
